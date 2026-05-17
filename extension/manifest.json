@@ -55,9 +55,10 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "dist/*.wasm",
+        "dist/*.mjs",
         "models/promptsmith-classifier/*",
-        "models/promptsmith-classifier/onnx/*",
-        "dist/*.wasm"
+        "models/promptsmith-classifier/onnx/*"
       ],
       "matches": ["<all_urls>"]
     }

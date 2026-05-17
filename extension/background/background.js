@@ -36,12 +36,22 @@ Return ONLY a valid JSON object. No markdown fences, no text outside the JSON:
   "enhanced_prompt": "<the fully enhanced prompt text>"
 }`;
 
+let creatingOffscreen = null;
+
 // Initialize extension settings on installation
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ isExtensionEnabled: true }, () => {
     console.log('[PromptSmith] Service worker installed. Extension enabled by default.');
   });
+  createOffscreenDocument().catch(err =>
+    console.warn('[PromptSmith] Offscreen setup on install failed:', err)
+  );
 });
+
+// Also create eagerly on every service worker startup so it shows in Inspect views
+createOffscreenDocument().catch(err =>
+  console.warn('[PromptSmith] Offscreen startup failed:', err)
+);
 
 /**
  * Compresses enhanced prompts to reduce token usage when Token-Efficient mode is active
@@ -112,35 +122,28 @@ function compressPrompt(text) {
   return collapsedLines.join('\n').trim();
 }
 
-let creatingOffscreen = null;
-
 /**
  * Creates and keeps alive a hidden offscreen document for heavy ML tasks
  */
 async function createOffscreenDocument() {
-  const offscreenUrl = chrome.runtime.getURL('offscreen.html');
-  
-  // Check if offscreen context already exists
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT']
-  });
-  if (existingContexts.length > 0) {
-    return;
-  }
-
-  // Avoid race conditions if multiple calls occur at the same time
+  // Avoid race conditions if multiple calls fire at the same time
   if (creatingOffscreen) {
     await creatingOffscreen;
     return;
   }
 
+  const hasDoc = await chrome.offscreen.hasDocument();
+  if (hasDoc) return;
+
+  const offscreenUrl = chrome.runtime.getURL('offscreen.html');
   creatingOffscreen = chrome.offscreen.createDocument({
     url: offscreenUrl,
-    reasons: ['WORKERS'],
-    justification: 'Run ONNX local neural network model for text classification'
+    reasons: [chrome.offscreen.Reason.WORKERS],
+    justification: 'ONNX classifier inference'
   });
   await creatingOffscreen;
   creatingOffscreen = null;
+  console.log('[PromptSmith] Offscreen document created.');
 }
 
 /**

@@ -541,11 +541,18 @@ Return ONLY a valid JSON object. No markdown fences, no text outside the JSON:
   "label": "<one of the 11 categories above>",
   "enhanced_prompt": "<the fully enhanced prompt text>"
 }`;
+var creatingOffscreen = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ isExtensionEnabled: true }, () => {
     console.log("[PromptSmith] Service worker installed. Extension enabled by default.");
   });
+  createOffscreenDocument().catch(
+    (err) => console.warn("[PromptSmith] Offscreen setup on install failed:", err)
+  );
 });
+createOffscreenDocument().catch(
+  (err) => console.warn("[PromptSmith] Offscreen startup failed:", err)
+);
 function compressPrompt(text) {
   if (!text)
     return text;
@@ -598,26 +605,23 @@ function compressPrompt(text) {
   }
   return collapsedLines.join("\n").trim();
 }
-var creatingOffscreen = null;
 async function createOffscreenDocument() {
-  const offscreenUrl = chrome.runtime.getURL("offscreen.html");
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ["OFFSCREEN_DOCUMENT"]
-  });
-  if (existingContexts.length > 0) {
-    return;
-  }
   if (creatingOffscreen) {
     await creatingOffscreen;
     return;
   }
+  const hasDoc = await chrome.offscreen.hasDocument();
+  if (hasDoc)
+    return;
+  const offscreenUrl = chrome.runtime.getURL("offscreen.html");
   creatingOffscreen = chrome.offscreen.createDocument({
     url: offscreenUrl,
-    reasons: ["WORKERS"],
-    justification: "Run ONNX local neural network model for text classification"
+    reasons: [chrome.offscreen.Reason.WORKERS],
+    justification: "ONNX classifier inference"
   });
   await creatingOffscreen;
   creatingOffscreen = null;
+  console.log("[PromptSmith] Offscreen document created.");
 }
 async function classifyPromptWithOffscreen(text) {
   try {

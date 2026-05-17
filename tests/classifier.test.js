@@ -7,7 +7,7 @@ global.chrome = {
   }
 };
 
-global.fetch = jest.fn().mockImplementation(async (url) => {
+global.fetch = jest.fn().mockImplementation(async (_url) => {
   return {
     ok: true,
     json: async () => ({
@@ -25,8 +25,15 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
     env: {
       allowRemoteModels: false,
       localModelPath: '',
+      backends: {
+        onnx: {
+          wasm: {
+            wasmPaths: ''
+          }
+        }
+      }
     },
-    pipeline: jest.fn().mockImplementation(async (task, model, options) => {
+    pipeline: jest.fn().mockImplementation(async (_task, _model, _options) => {
       return jest.fn().mockImplementation(async (text) => {
         const textLower = text.toLowerCase();
         

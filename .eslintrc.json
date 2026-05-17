@@ -3,7 +3,8 @@
     "browser": true,
     "es2022": true,
     "webextensions": true,
-    "jest": true
+    "jest": true,
+    "node": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {

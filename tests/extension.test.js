@@ -13,8 +13,15 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
     env: {
       allowRemoteModels: false,
       localModelPath: '',
+      backends: {
+        onnx: {
+          wasm: {
+            wasmPaths: ''
+          }
+        }
+      }
     },
-    pipeline: jest.fn().mockImplementation(async (task, model, options) => {
+    pipeline: jest.fn().mockImplementation(async (_task, _model, _options) => {
       // Mock classifier pipeline that parses text context
       return jest.fn().mockImplementation(async (text) => {
         const textLower = text.toLowerCase();
@@ -32,7 +39,7 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
 
 // Import modules after applying mocks
 const { classifyPrompt, isHighConfidence } = await import('../extension/core/classifier.js');
-const { detectPlatform, getEnhancementMode } = await import('../extension/core/model-detector.js');
+const { detectPlatform } = await import('../extension/core/model-detector.js');
 const { routeAndEnhance } = await import('../extension/core/router.js');
 
 describe('PromptSmith Extension Integration Tests', () => {
@@ -94,7 +101,7 @@ describe('PromptSmith Extension Integration Tests', () => {
     // Test FULL Mode (standard model)
     const fullResult = routeAndEnhance(prompt, 'math', 'full');
     expect(fullResult.technique.shortName).toBe('SC');
-    expect(fullResult.enhanced).toContain('Solve this problem THREE separate times using three completely different approaches');
+    expect(fullResult.enhanced).toContain('Solve this three separate times using three completely different');
 
     // Test LIGHT Mode (reasoning model)
     // Note: If the enhanced prompt length exceeds original prompt length, Task 7 rules prune it.

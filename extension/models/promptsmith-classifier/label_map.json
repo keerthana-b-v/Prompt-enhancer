@@ -1,0 +1,28 @@
+{
+  "label2id": {
+    "agentic": 0,
+    "analysis": 1,
+    "code": 2,
+    "conversational": 3,
+    "creative": 4,
+    "factual": 5,
+    "longform": 6,
+    "math": 7,
+    "planning": 8,
+    "skip": 9,
+    "structured_output": 10
+  },
+  "id2label": {
+    "0": "agentic",
+    "1": "analysis",
+    "2": "code",
+    "3": "conversational",
+    "4": "creative",
+    "5": "factual",
+    "6": "longform",
+    "7": "math",
+    "8": "planning",
+    "9": "skip",
+    "10": "structured_output"
+  }
+}

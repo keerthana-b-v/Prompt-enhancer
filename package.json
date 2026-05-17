@@ -1,0 +1,36 @@
+{
+  "name": "promptsmith",
+  "version": "1.0.0",
+  "description": "Technique-aware prompt enhancement for ChatGPT, Claude & Gemini",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.1",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
+  },
+  "keywords": [
+    "chrome-extension",
+    "chatgpt",
+    "claude",
+    "gemini",
+    "prompt-engineering",
+    "prompt-enhancement",
+    "chain-of-thought",
+    "reasoning-models"
+  ],
+  "author": "PromptSmith Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptsmith/promptsmith.git"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0"
+  }
+}

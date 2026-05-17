@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptSmith Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Onboarding Screen (hidden by default) -->
+  <div id="onboarding-screen" class="ps-popup" style="display: none; width: 340px; box-sizing: border-box;">
+    <header class="ps-popup-header">
+      <div class="ps-logo-container">
+        <img src="../icons/icon48.png" alt="PromptSmith Logo" class="ps-popup-logo">
+        <div class="ps-logo-text">
+          <h1>PromptSmith</h1>
+          <span class="ps-version">v2.0.0</span>
+        </div>
+      </div>
+    </header>
+    
+    <main class="ps-popup-main" style="padding: 12px; box-sizing: border-box;">
+      <h2 style="margin: 0 0 5px 0; font-size: 15px; text-align: center; color: #1f2937;">🚀 Welcome to PromptSmith V2!</h2>
+      <p style="font-size: 11px; color: #4b5563; text-align: center; margin: 0 0 15px 0; line-height: 1.4;">Let's get your professional prompt assistant configured in 3 easy steps!</p>
+      
+      <!-- Step 1 Card -->
+      <section class="ps-card" style="margin-bottom: 10px; border-left: 3px solid #3b82f6; padding: 10px;">
+        <h3 style="margin: 0 0 3px 0; font-size: 12px; color: #1e3a8a; display: flex; align-items: center; gap: 4px;">1️⃣ Download Model Files</h3>
+        <p style="font-size: 10px; color: #4b5563; line-height: 1.3; margin: 0 0 6px 0;">Get the local quantized classifier model files (~70MB one-time download).</p>
+        <a href="https://github.com/promptsmith/promptsmith/releases" target="_blank" class="ps-btn-primary" style="display: block; text-align: center; text-decoration: none; font-size: 10px; padding: 5px 10px; margin: 0; box-sizing: border-box;">📥 Download model zip</a>
+      </section>
+
+      <!-- Step 2 Card -->
+      <section class="ps-card" style="margin-bottom: 10px; border-left: 3px solid #10b981; padding: 10px;">
+        <h3 style="margin: 0 0 3px 0; font-size: 12px; color: #064e3b; display: flex; align-items: center; gap: 4px;">2️⃣ Install Model Files</h3>
+        <p style="font-size: 10px; color: #4b5563; line-height: 1.3; margin: 0 0 4px 0;">Unzip and place all files directly inside the following folder path:</p>
+        <code style="background: #f3f4f6; padding: 3px; border-radius: 4px; font-size: 9px; display: block; overflow-x: auto; margin: 0 0 6px 0; word-break: break-all; white-space: pre-wrap;">promptsmith-extension/models/promptsmith-classifier/</code>
+        <button id="ob-copied-btn" class="ps-btn-primary" style="width: 100%; font-size: 10px; padding: 5px; margin: 0; background: #10b981; border: none; cursor: pointer; box-sizing: border-box;" type="button">✓ I have copied the files</button>
+      </section>
+
+      <!-- Step 3 Card -->
+      <section class="ps-card" style="margin-bottom: 10px; border-left: 3px solid #c084fc; padding: 10px;">
+        <h3 style="margin: 0 0 3px 0; font-size: 12px; color: #581c87; display: flex; align-items: center; gap: 4px;">3️⃣ Optional API Keys</h3>
+        <p style="font-size: 10px; color: #4b5563; line-height: 1.3; margin: 0 0 6px 0;">Add optional API keys for cloud enhancements when local confidence is below 72%.</p>
+        <div style="margin-bottom: 8px;">
+          <input type="password" id="ob-groq-key" placeholder="Groq API Key (Optional)" style="width: 100%; padding: 5px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 4px; box-sizing: border-box;">
+          <input type="password" id="ob-gemini-key" placeholder="Gemini API Key (Optional)" style="width: 100%; padding: 5px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box;">
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button id="ob-skip-btn" class="ps-toggle-btn" style="flex: 1; padding: 5px; font-size: 10px; border-radius: 4px; cursor: pointer;" type="button">Skip for now</button>
+          <button id="ob-finish-btn" class="ps-btn-primary" style="flex: 1; padding: 5px; font-size: 10px; border-radius: 4px; background: #c084fc; cursor: pointer; border: none;" type="button">Save & Finish</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Normal Settings Panel Wrapper -->
+  <div id="settings-screen" class="ps-popup" style="display: block; width: 340px; box-sizing: border-box;">
+    <!-- Header -->
+    <header class="ps-popup-header">
+      <div class="ps-logo-container">
+        <img src="../icons/icon48.png" alt="PromptSmith Logo" class="ps-popup-logo">
+        <div class="ps-logo-text">
+          <h1>PromptSmith</h1>
+          <span class="ps-version">v2.0.0</span>
+        </div>
+      </div>
+      <div class="ps-header-right">
+        <!-- Master Enable/Disable Toggle -->
+        <label class="ps-switch" title="Toggle Extension On/Off">
+          <input type="checkbox" id="extension-toggle" checked>
+          <span class="ps-slider"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="ps-popup-main">
+      <section class="ps-card">
+        <h2>⚡ Routing Preferences</h2>
+        <div class="ps-field">
+          <label for="provider-select">Preferred AI Enhancer:</label>
+          <div class="ps-select-wrapper">
+            <select id="provider-select">
+              <option value="auto">🔥 Auto-Route (Cascade Fallback)</option>
+              <option value="groq">⚡ Groq (Llama 3.3 70B - Fastest)</option>
+              <option value="gemini">🤖 Google AI Studio (Gemini Flash)</option>
+              <option value="openrouter">🚀 OpenRouter (Free Credits)</option>
+              <option value="local">🔌 Local Offline Rules Only</option>
+            </select>
+          </div>
+          <p class="ps-input-desc">Auto-Route uses the first available active API key, falling back to local formulas offline.</p>
+        </div>
+        
+        <div class="ps-field" style="margin-top: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="token-efficient-toggle" style="font-weight: 500; cursor: pointer;">⚡ Token-Efficient Mode</label>
+            <label class="ps-switch">
+              <input type="checkbox" id="token-efficient-toggle">
+              <span class="ps-slider"></span>
+            </label>
+          </div>
+          <p class="ps-input-desc" style="margin-top: 5px;">Compresses enhanced prompts to reduce token usage. Recommended for API users.</p>
+        </div>
+      </section>
+
+      <section class="ps-card">
+        <h2>🔑 API Keys (Saved Securely)</h2>
+        
+        <!-- Groq Key -->
+        <div class="ps-field">
+          <div class="ps-field-header">
+            <label for="groq-key">Groq API Key: <span id="groq-check" style="color: #10b981; display: none; font-weight: bold; margin-left: 5px;">✓</span></label>
+            <a href="https://console.groq.com/" target="_blank" class="ps-key-link">Get Key ↗</a>
+          </div>
+          <div class="ps-input-wrapper">
+            <input type="password" id="groq-key" placeholder="gsk_...">
+            <button class="ps-toggle-btn" data-target="groq-key" type="button">👁️</button>
+          </div>
+        </div>
+
+        <!-- Gemini Key -->
+        <div class="ps-field">
+          <div class="ps-field-header">
+            <label for="gemini-key">Gemini API Key: <span id="gemini-check" style="color: #10b981; display: none; font-weight: bold; margin-left: 5px;">✓</span></label>
+            <a href="https://aistudio.google.com/" target="_blank" class="ps-key-link">Get Key ↗</a>
+          </div>
+          <div class="ps-input-wrapper">
+            <input type="password" id="gemini-key" placeholder="AIzaSy...">
+            <button class="ps-toggle-btn" data-target="gemini-key" type="button">👁️</button>
+          </div>
+        </div>
+
+        <!-- OpenRouter Key -->
+        <div class="ps-field">
+          <div class="ps-field-header">
+            <label for="openrouter-key">OpenRouter API Key:</label>
+            <a href="https://openrouter.ai/" target="_blank" class="ps-key-link">Get Key ↗</a>
+          </div>
+          <div class="ps-input-wrapper">
+            <input type="password" id="openrouter-key" placeholder="sk-or-v1-...">
+            <button class="ps-toggle-btn" data-target="openrouter-key" type="button">👁️</button>
+          </div>
+        </div>
+
+        <button id="save-btn" class="ps-btn-primary">
+          <span class="ps-btn-icon">💾</span> Save Settings
+        </button>
+        <div id="save-status" class="ps-status-msg"></div>
+      </section>
+
+      <!-- System Diagnostics -->
+      <section class="ps-card ps-diagnostic-card">
+        <h2>🛠️ Extension Diagnostics</h2>
+        <div class="ps-diag-grid">
+          <div class="ps-diag-item">
+            <span class="ps-diag-label">Status</span>
+            <span class="ps-diag-value active" id="diag-status">● Enabled</span>
+          </div>
+          <div class="ps-diag-item">
+            <span class="ps-diag-label">Active Mode</span>
+            <span class="ps-diag-value" id="diag-mode">Full</span>
+          </div>
+          <div class="ps-diag-item">
+            <span class="ps-diag-label">Provider</span>
+            <span class="ps-diag-value" id="diag-provider">Offline</span>
+          </div>
+          <div class="ps-diag-item" style="grid-column: span 3; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+            <span class="ps-diag-label">🧠 Local Model</span>
+            <span class="ps-diag-value" id="diag-model-status" style="font-weight: 500;">○ Checking...</span>
+          </div>
+        </div>
+        
+        <!-- Instruction panel hidden by default -->
+        <div id="model-install-panel" style="display: none; margin-top: 12px; border-top: 1px dashed #ea580c; padding-top: 10px;">
+          <h3 style="color: #ea580c; margin-top: 0; font-size: 13px; display: flex; align-items: center; gap: 5px;">🍊 How to Install Local Model</h3>
+          <p style="font-size: 11px; line-height: 1.4; color: #4b5563; margin-bottom: 8px;">
+            1. Download <b>promptsmith-onnx.zip</b> from your local build.<br>
+            2. Unzip and copy files directly into the extension directory:<br>
+            <code style="background: #f3f4f6; padding: 2px 4px; border-radius: 4px; font-size: 10px; display: inline-block; margin: 3px 0;">extension/models/promptsmith-classifier/</code><br>
+            3. Make sure all 6 files (.onnx, label_map.json, etc.) are in that folder, then reload the extension page.
+          </p>
+          <button id="close-install-panel" class="ps-toggle-btn" style="width: 100%; font-size: 10px; padding: 5px; border-radius: 4px; border: 1px solid #d1d5db; background: #f3f4f6; cursor: pointer;" type="button">Got it, close instructions</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="ps-popup-footer">
+      <div class="ps-links">
+        <a href="https://github.com/promptsmith/promptsmith" target="_blank">GitHub Repository</a>
+        <span>•</span>
+        <a href="../docs/techniques.md" target="_blank">Wiki</a>
+        <span>•</span>
+        <a href="#" id="reset-onboarding-link">⚙️ Setup Guide</a>
+      </div>
+      <p class="ps-footer-copyright">MIT Licensed © 2026 PromptSmith Contributors</p>
+    </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

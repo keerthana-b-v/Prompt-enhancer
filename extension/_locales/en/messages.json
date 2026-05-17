@@ -1,0 +1,18 @@
+{
+  "appName": {
+    "message": "PromptSmith",
+    "description": "The name of the extension."
+  },
+  "appDesc": {
+    "message": "Technique-aware prompt enhancement for ChatGPT, Claude & Gemini.",
+    "description": "The description of the extension."
+  },
+  "btnEnhance": {
+    "message": "Enhance",
+    "description": "Label for the prompt enhancement button."
+  },
+  "btnUndo": {
+    "message": "Undo",
+    "description": "Label for the undo prompt restoration button."
+  }
+}

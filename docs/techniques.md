@@ -1,6 +1,6 @@
-# PromptSmith Prompting Techniques Wiki
+# PromptRoute Prompting Techniques Wiki
 
-Welcome to the community wiki for prompting techniques integrated into PromptSmith. This document outlines the technical papers, ideal use cases, operational mechanics, token overheads, and practical examples for each supported technique.
+Welcome to the community wiki for prompting techniques integrated into PromptRoute. This document outlines the technical papers, ideal use cases, operational mechanics, token overheads, and practical examples for each supported technique.
 
 ---
 

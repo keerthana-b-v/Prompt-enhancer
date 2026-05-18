@@ -1,5 +1,5 @@
 // extension/core/router.js
-// Maps (useCase × mode) → correct prompt engineering technique in PromptSmith V2
+// Maps (useCase × mode) → correct prompt engineering technique in PromptRoute V2
 
 import {
   cot,
@@ -21,7 +21,7 @@ import {
   adversarialPrompting
 } from './techniques/index.js';
 
-// Mapped techniques structure matching the upgraded PromptSmith V2 schema
+// Mapped techniques structure matching the upgraded PromptRoute V2 schema
 const TECHNIQUE_MAP = {
   math:             { primary: selfConsistency, secondary: cot },
   code:             { primary: pot,             secondary: react },

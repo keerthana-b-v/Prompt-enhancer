@@ -48,7 +48,7 @@ function isReasoningModel() {
         }
       }
     } catch (e) {
-      console.warn(`[PromptSmith] Error querying selector ${selector}:`, e);
+      console.warn(`[PromptRoute] Error querying selector ${selector}:`, e);
     }
   }
   try {
@@ -576,14 +576,14 @@ Return valid JSON only:
 var creatingOffscreen = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ isExtensionEnabled: true }, () => {
-    console.log("[PromptSmith] Service worker installed. Extension enabled by default.");
+    console.log("[PromptRoute] Service worker installed. Extension enabled by default.");
   });
   createOffscreenDocument().catch(
-    (err) => console.warn("[PromptSmith] Offscreen setup on install failed:", err)
+    (err) => console.warn("[PromptRoute] Offscreen setup on install failed:", err)
   );
 });
 createOffscreenDocument().catch(
-  (err) => console.warn("[PromptSmith] Offscreen startup failed:", err)
+  (err) => console.warn("[PromptRoute] Offscreen startup failed:", err)
 );
 function compressPrompt(text) {
   if (!text)
@@ -653,7 +653,7 @@ async function createOffscreenDocument() {
   });
   await creatingOffscreen;
   creatingOffscreen = null;
-  console.log("[PromptSmith] Offscreen document created.");
+  console.log("[PromptRoute] Offscreen document created.");
 }
 async function classifyPromptWithOffscreen(text) {
   try {
@@ -665,7 +665,7 @@ async function classifyPromptWithOffscreen(text) {
         text
       }, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn("[PromptSmith BG] Offscreen communication error:", chrome.runtime.lastError.message);
+          console.warn("[PromptRoute BG] Offscreen communication error:", chrome.runtime.lastError.message);
           resolve({ label: "general", confidence: 0 });
         } else {
           resolve(response || { label: "general", confidence: 0 });
@@ -673,7 +673,7 @@ async function classifyPromptWithOffscreen(text) {
       });
     });
   } catch (err) {
-    console.error("[PromptSmith BG] Failed to boot offscreen classifier:", err);
+    console.error("[PromptRoute BG] Failed to boot offscreen classifier:", err);
     return { label: "general", confidence: 0 };
   }
 }
@@ -683,7 +683,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     classifyPromptWithOffscreen(textToClassify).then((result) => {
       sendResponse(result);
     }).catch((err) => {
-      console.error("[PromptSmith BG] Classification error:", err);
+      console.error("[PromptRoute BG] Classification error:", err);
       sendResponse({ label: "general", confidence: 0 });
     });
     return true;
@@ -743,7 +743,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     enhanceWithFreeAPI(message).then((result) => {
       sendResponse(result);
     }).catch((err) => {
-      console.error("[PromptSmith BG] API error:", err);
+      console.error("[PromptRoute BG] API error:", err);
       sendResponse(localFallback(message));
     });
     return true;
@@ -754,7 +754,7 @@ async function enhanceWithFreeAPI(message) {
   try {
     result = await getAPIResponse(message);
   } catch (err) {
-    console.error("[PromptSmith BG] getAPIResponse failed, falling back to local formulas:", err);
+    console.error("[PromptRoute BG] getAPIResponse failed, falling back to local formulas:", err);
     result = localFallback(message);
   }
   const storage = await chrome.storage.sync.get(["tokenEfficientMode"]);
@@ -775,45 +775,45 @@ async function getAPIResponse({ prompt, useCase, mode, techniqueName }) {
     try {
       return await callGroq(prompt, useCase, mode, techniqueName, storage.groqApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] Groq preferred failed:", e.message);
+      console.warn("[PromptRoute] Groq preferred failed:", e.message);
     }
   }
   if (provider === "gemini" && storage.geminiApiKey) {
     try {
       return await callGemini(prompt, useCase, mode, techniqueName, storage.geminiApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] Gemini preferred failed:", e.message);
+      console.warn("[PromptRoute] Gemini preferred failed:", e.message);
     }
   }
   if (provider === "openrouter" && storage.openrouterApiKey) {
     try {
       return await callOpenRouter(prompt, useCase, mode, techniqueName, storage.openrouterApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] OpenRouter preferred failed:", e.message);
+      console.warn("[PromptRoute] OpenRouter preferred failed:", e.message);
     }
   }
   if (storage.groqApiKey) {
     try {
       return await callGroq(prompt, useCase, mode, techniqueName, storage.groqApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] Cascade Groq failed:", e.message);
+      console.warn("[PromptRoute] Cascade Groq failed:", e.message);
     }
   }
   if (storage.geminiApiKey) {
     try {
       return await callGemini(prompt, useCase, mode, techniqueName, storage.geminiApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] Cascade Gemini failed:", e.message);
+      console.warn("[PromptRoute] Cascade Gemini failed:", e.message);
     }
   }
   if (storage.openrouterApiKey) {
     try {
       return await callOpenRouter(prompt, useCase, mode, techniqueName, storage.openrouterApiKey);
     } catch (e) {
-      console.warn("[PromptSmith] Cascade OpenRouter failed:", e.message);
+      console.warn("[PromptRoute] Cascade OpenRouter failed:", e.message);
     }
   }
-  console.warn("[PromptSmith] No active API keys configured. Falling back to local rules.");
+  console.warn("[PromptRoute] No active API keys configured. Falling back to local rules.");
   return localFallback({ prompt, useCase, mode, techniqueName });
 }
 async function callGroq(prompt, useCase, mode, techniqueName, apiKey) {
@@ -875,7 +875,7 @@ async function callOpenRouter(prompt, useCase, mode, techniqueName, apiKey) {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`,
       "HTTP-Referer": "https://github.com/promptsmith/promptsmith",
-      "X-Title": "PromptSmith"
+      "X-Title": "PromptRoute"
     },
     body: JSON.stringify({
       model: "google/gemini-2.0-flash-exp:free",
@@ -969,7 +969,7 @@ function cleanAPIOutput(text) {
 function localFallback({ prompt, useCase, mode, techniqueName: _techniqueName }) {
   const categoryLabel = useCase.toUpperCase();
   const modeLabel = mode === "light" ? "\u26A1 Light Mode" : "\u{1F525} Full Mode";
-  const enhanced = `[Context/Domain: ${categoryLabel} - Optimized via PromptSmith ${modeLabel}]
+  const enhanced = `[Context/Domain: ${categoryLabel} - Optimized via PromptRoute ${modeLabel}]
 I am working on the following task:
 
 "${prompt}"

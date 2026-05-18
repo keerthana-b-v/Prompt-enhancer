@@ -1,6 +1,6 @@
-PromptSmith 🛠️✨ — Premium, Technique-Aware AI Prompt Enhancement
+PromptRoute 🛠️✨ — Premium, Technique-Aware AI Prompt Enhancement
 
-Take absolute control of your LLM prompts inside ChatGPT, Claude, and Gemini with PromptSmith! PromptSmith is a zero-latency, privacy-first, zero-cost browser extension that automatically classifies and optimizes your raw prompts in real-time using academically proven prompting techniques—offline or cascade-routed to cloud APIs.
+Take absolute control of your LLM prompts inside ChatGPT, Claude, and Gemini with PromptRoute! PromptRoute is a zero-latency, privacy-first, zero-cost browser extension that automatically classifies and optimizes your raw prompts in real-time using academically proven prompting techniques—offline or cascade-routed to cloud APIs.
 
 === 🚀 KEY FEATURES ===
 * 🧠 Edge ML Classification: Instantly detects the structural intent of your prompt (e.g. math, coding, creative, factual, planning) using a highly optimized, dynamic transformer model running locally in your browser.
@@ -16,6 +16,6 @@ Take absolute control of your LLM prompts inside ChatGPT, Claude, and Gemini wit
 
 === 📦 LOCAL MODEL SETUP ===
 For optimal edge ML performance:
-1. Clone the PromptSmith repository.
+1. Clone the PromptRoute repository.
 2. Run our 8-bit dynamic INT8 quantization notebook to compile the 15MB Edge Classifier model.
 3. Place `model_quantized.onnx` inside the extension's model directory and load unpacking to enjoy zero-cost, private prompt routing!

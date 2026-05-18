@@ -1,5 +1,5 @@
 // tests/technique-test.js
-// Automated test suite for PromptSmith techniques and routing logic.
+// Automated test suite for PromptRoute techniques and routing logic.
 // Run: node tests/technique-test.js
 //
 // Classifier section uses keyword matching — the production ONNX classifier
@@ -115,7 +115,7 @@ function hr(char, len) {
 // ─────────────────────────────────────────────────────────────────────────────
 const LINE_WIDTH = 120;
 console.log('\n' + hr('═', LINE_WIDTH));
-console.log('  PromptSmith Automated Test Suite');
+console.log('  PromptRoute Automated Test Suite');
 console.log(hr('═', LINE_WIDTH) + '\n');
 console.log('SECTION 1 — Classification & Routing\n');
 console.log('  Classifier: keyword-based (ONNX model requires browser WASM — not available in Node.js)\n');

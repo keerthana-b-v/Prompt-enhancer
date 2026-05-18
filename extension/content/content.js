@@ -1,4 +1,4 @@
-// PromptSmith Content Script
+// PromptRoute Content Script
 // Injected into chatgpt.com, claude.ai, gemini.google.com
 
 import { detectPlatform, getEnhancementMode } from '../core/model-detector.js';
@@ -71,10 +71,10 @@ function setPromptText(text) {
 }
 
 function injectEnhanceButton(box) {
-  if (document.getElementById('promptsmith-btn')) return;
+  if (document.getElementById('promptroute-btn')) return;
 
   enhanceButton = document.createElement('button');
-  enhanceButton.id = 'promptsmith-btn';
+  enhanceButton.id = 'promptroute-btn';
   
   const sparkle = document.createElement('span');
   sparkle.className = 'ps-btn-sparkle';
@@ -87,7 +87,7 @@ function injectEnhanceButton(box) {
   enhanceButton.appendChild(sparkle);
   enhanceButton.appendChild(btnText);
 
-  enhanceButton.title = 'Enhance with PromptSmith';
+  enhanceButton.title = 'Enhance with PromptRoute';
   enhanceButton.addEventListener('click', handleEnhance);
 
   const parent = box.parentElement;
@@ -168,7 +168,7 @@ async function handleEnhance() {
 
   // Persist original prompt globally so override buttons always have access to it,
   // even after the input box has been replaced with the enhanced version.
-  window.promptSmithOriginal = originalPrompt;
+  window.promptRouteOriginal = originalPrompt;
 
   // Update button loading UI
   enhanceButton.classList.add('loading');
@@ -177,7 +177,7 @@ async function handleEnhance() {
 
   try {
     // 1. Offload ONNX classification task to background service worker
-    console.log('[PromptSmith] Sending classification request...');
+    console.log('[PromptRoute] Sending classification request...');
     const classResponse = await chrome.runtime.sendMessage({
       type: 'CLASSIFY_PROMPT',
       text: originalPrompt
@@ -200,7 +200,7 @@ async function handleEnhance() {
 
     // Resolve which technique the router will select for this label+mode
     const debugTechnique = routeAndEnhance('', useCase, mode).technique?.name || 'Instruction Prompting';
-    console.log(`[PromptSmith] Label: ${useCase} | Confidence: ${confidence.toFixed(2)} | Mode: ${mode} | Technique: ${debugTechnique}`);
+    console.log(`[PromptRoute] Label: ${useCase} | Confidence: ${confidence.toFixed(2)} | Mode: ${mode} | Technique: ${debugTechnique}`);
 
     if (useCase === 'skip') {
       showToast('This prompt does not need enhancement.');
@@ -245,9 +245,9 @@ async function handleEnhance() {
     showToast('Prompt enhanced successfully!');
 
   } catch (err) {
-    console.error('[PromptSmith] Enhancement failed:', err);
+    console.error('[PromptRoute] Enhancement failed:', err);
     if (err.message && err.message.includes('Extension context invalidated')) {
-      showToast('Extension reloaded — please refresh this page to reconnect PromptSmith.');
+      showToast('Extension reloaded — please refresh this page to reconnect PromptRoute.');
       return;
     }
     showToast('Enhancement failed. Please try again.');
@@ -262,7 +262,7 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
   explanationPanel?.remove();
 
   explanationPanel = document.createElement('div');
-  explanationPanel.id = 'promptsmith-panel';
+  explanationPanel.id = 'promptroute-panel';
   explanationPanel.className = 'ps-panel-fade-in';
 
   const modeLabel = mode === 'light' ? '⚡ Light (Reasoning Model detected)' : '🔥 Full';
@@ -520,7 +520,7 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
         btn.style.opacity = '0.5';
         btn.disabled = true;
 
-        const original = window.promptSmithOriginal || getPromptText();
+        const original = window.promptRouteOriginal || getPromptText();
         const mode = getEnhancementMode();
         let enhanced = mode === 'light'
           ? targetTechnique.applyLight(original)
@@ -540,10 +540,10 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
 }
 
 function showToast(msg) {
-  document.getElementById('promptsmith-toast')?.remove();
+  document.getElementById('promptroute-toast')?.remove();
 
   const toast = document.createElement('div');
-  toast.id = 'promptsmith-toast';
+  toast.id = 'promptroute-toast';
   toast.className = 'ps-toast-fade-in';
   
   const icon = document.createElement('span');
@@ -587,14 +587,14 @@ function runBoot() {
       if (box && isEnabled) {
         injectEnhanceButton(box);
       } else {
-        document.getElementById('promptsmith-btn')?.remove();
+        document.getElementById('promptroute-btn')?.remove();
         enhanceButton = null;
       }
     } catch (e) {
       if (e.message && e.message.includes('Extension context invalidated')) {
         clearInterval(intervalId);
       } else {
-        console.warn('[PromptSmith] Scanner bootloop error:', e);
+        console.warn('[PromptRoute] Scanner bootloop error:', e);
       }
     }
   }, 1000);

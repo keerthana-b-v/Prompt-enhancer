@@ -42,12 +42,12 @@ export async function loadLabelMap() {
       for (const [id, label] of Object.entries(data)) {
         label2id[label] = parseInt(id, 10);
       }
-      console.log('[PromptSmith] Dynamic label_map.json loaded successfully:', id2label);
+      console.log('[PromptRoute] Dynamic label_map.json loaded successfully:', id2label);
     } else {
       throw new Error(`Unsupported URL scheme: ${url}`);
     }
   } catch (error) {
-    console.warn('[PromptSmith] Failed to load label_map.json dynamically. Using hardcoded fallback mapping.');
+    console.warn('[PromptRoute] Failed to load label_map.json dynamically. Using hardcoded fallback mapping.');
   }
 }
 
@@ -60,7 +60,7 @@ class ClassifierSingleton {
   static async getInstance() {
     if (!this.loaded) {
       try {
-        console.log('[PromptSmith] Initializing local ONNX classifier via WASM...');
+        console.log('[PromptRoute] Initializing local ONNX classifier via WASM...');
         this.tokenizer = await AutoTokenizer.from_pretrained(this.modelPath);
         this.model = await AutoModelForSequenceClassification.from_pretrained(this.modelPath, {
           dtype: 'q8',
@@ -68,10 +68,10 @@ class ClassifierSingleton {
         });
         this.loaded = true;
         MODEL_LOADED = true;
-        console.log('[PromptSmith] ONNX model successfully loaded via WASM.');
+        console.log('[PromptRoute] ONNX model successfully loaded via WASM.');
         await loadLabelMap();
       } catch (err) {
-        console.error('[PromptSmith] ONNX model loading failed:', err);
+        console.error('[PromptRoute] ONNX model loading failed:', err);
         MODEL_LOADED = false;
       }
     }
@@ -88,11 +88,11 @@ class ClassifierSingleton {
       ClassifierSingleton.getInstance().catch(() => {});
     } else {
       MODEL_LOADED = false;
-      console.warn('[PromptSmith] model_quantized.onnx not found. MODEL_LOADED flag set to false.');
+      console.warn('[PromptRoute] model_quantized.onnx not found. MODEL_LOADED flag set to false.');
     }
   } catch (err) {
     MODEL_LOADED = false;
-    console.warn('[PromptSmith] Pre-emptive model check failed (likely first-run):', err);
+    console.warn('[PromptRoute] Pre-emptive model check failed (likely first-run):', err);
   }
 })();
 
@@ -105,7 +105,7 @@ export async function classifyPrompt(text) {
   try {
     const components = await ClassifierSingleton.getInstance();
     if (!components) {
-      console.warn('[PromptSmith] Classifier is offline. Bypassing and returning general label.');
+      console.warn('[PromptRoute] Classifier is offline. Bypassing and returning general label.');
       return { label: 'general', confidence: 0 };
     }
 
@@ -137,7 +137,7 @@ export async function classifyPrompt(text) {
       confidence: maxScore
     };
   } catch (error) {
-    console.error('[PromptSmith] Error during prompt classification:', error);
+    console.error('[PromptRoute] Error during prompt classification:', error);
   }
 
   return { label: 'general', confidence: 0 };

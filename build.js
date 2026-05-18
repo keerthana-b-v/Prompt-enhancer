@@ -61,7 +61,7 @@ async function run() {
   }
 
   if (isWatch) {
-    console.log('Starting PromptSmith watch compiler...');
+    console.log('Starting PromptRoute watch compiler...');
     const contentCtx = await esbuild.context(contentConfig);
     const backgroundCtx = await esbuild.context(backgroundConfig);
     const offscreenCtx = await esbuild.context(offscreenConfig);
@@ -72,7 +72,7 @@ async function run() {
     
     console.log('Watching for changes in extension/ files...');
   } else {
-    console.log('Building PromptSmith bundles...');
+    console.log('Building PromptRoute bundles...');
     
     await esbuild.build(contentConfig);
     await esbuild.build(backgroundConfig);

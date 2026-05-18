@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug Report
-about: Create a report to help us improve PromptSmith
+about: Create a report to help us improve PromptRoute
 title: '[BUG] '
 labels: bug
 assignees: ''

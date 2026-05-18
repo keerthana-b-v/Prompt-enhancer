@@ -64,7 +64,7 @@ const { classifyPrompt, isHighConfidence } = await import('../extension/core/cla
 const { detectPlatform } = await import('../extension/core/model-detector.js');
 const { routeAndEnhance } = await import('../extension/core/router.js');
 
-describe('PromptSmith Extension Integration Tests', () => {
+describe('PromptRoute Extension Integration Tests', () => {
   
   beforeEach(() => {
     // Reset window and document mocks before each test

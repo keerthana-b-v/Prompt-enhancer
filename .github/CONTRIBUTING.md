@@ -1,8 +1,8 @@
-# Contributing to PromptSmith
+# Contributing to PromptRoute
 
 First off, thank you for taking the time to contribute! 🎉
 
-PromptSmith is a community-driven project built to democratize high-end prompting techniques directly in the browser. We welcome contributions of all forms: new techniques, performance fixes, styling polish, and documentation.
+PromptRoute is a community-driven project built to democratize high-end prompting techniques directly in the browser. We welcome contributions of all forms: new techniques, performance fixes, styling polish, and documentation.
 
 ---
 

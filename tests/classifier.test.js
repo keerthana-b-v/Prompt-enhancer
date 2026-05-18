@@ -100,7 +100,7 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
 // Import after mocking
 const { classifyPrompt, isHighConfidence } = await import('../extension/core/classifier.js');
 
-describe('PromptSmith Classifier Engine Tests', () => {
+describe('PromptRoute Classifier Engine Tests', () => {
   
   test('should classify math queries to Chain-of-Thought (cot)', async () => {
     const mathPrompt = "Solve the equation x^2 + 4x - 12 = 0 and calculate the roots.";

@@ -1,4 +1,4 @@
-# 🧠 PromptSmith Local ONNX Model Destination
+# 🧠 PromptRoute Local ONNX Model Destination
 
 This directory is the runtime destination for your custom-trained local prompt classification model assets.
 
@@ -22,7 +22,7 @@ extension/
 
 ## ⚡ What Happens Next?
 
-Once these 5 files are placed in this folder, **PromptSmith** will instantly switch from running local offline templates to executing high-performance **in-browser neural network classification** using **WebGPU hardware acceleration** (with seamless CPU-WASM fallback)!
+Once these 5 files are placed in this folder, **PromptRoute** will instantly switch from running local offline templates to executing high-performance **in-browser neural network classification** using **WebGPU hardware acceleration** (with seamless CPU-WASM fallback)!
 
 1. **Service Worker Loading**: The extension service worker (`dist/background.js`) loads the ONNX engine in a separate sandboxed thread via Transformers.js.
 2. **Zero Network Latency**: Zero API keys are needed, zero costs are incurred, and your prompt texts never leave your local computer.

@@ -1,6 +1,6 @@
-# Adding New Prompting Techniques to PromptSmith
+# Adding New Prompting Techniques to PromptRoute
 
-Thank you for contributing to PromptSmith! We've made our system highly modular so that adding a new prompting technique (e.g., *Reflexion*, *ReAct*, or *Active Prompting*) is extremely simple.
+Thank you for contributing to PromptRoute! We've made our system highly modular so that adding a new prompting technique (e.g., *Reflexion*, *ReAct*, or *Active Prompting*) is extremely simple.
 
 Here is the step-by-step guide to adding a new prompting technique to our core library.
 

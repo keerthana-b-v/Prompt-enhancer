@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 import csv
 import random
@@ -12,7 +12,7 @@ if sys.stdout.encoding != 'utf-8':
     except AttributeError:
         pass
 
-print("🏁 Booting PromptSmith Dataset Preparation Engine...")
+print("ðŸ Booting PromptRoute Dataset Preparation Engine...")
 
 # Define target labels and properties
 VALID_LABELS = [
@@ -76,7 +76,7 @@ programmatic_skips = programmatic_skips[:200]
 
 total_skip_prompts = manual_skips + programmatic_skips
 
-print(f"📦 Assembled {len(total_skip_prompts)} skip prompts (300 manual, 200 programmatic).")
+print(f"ðŸ“¦ Assembled {len(total_skip_prompts)} skip prompts (300 manual, 200 programmatic).")
 
 # Helper functions for metadata enrichment
 def get_length_bucket(text):
@@ -179,7 +179,7 @@ all_rows = []
 
 # 1. Dolly
 try:
-    print("📥 Loading Dolly-15k from Hugging Face...")
+    print("ðŸ“¥ Loading Dolly-15k from Hugging Face...")
     dolly = load_dataset("databricks/databricks-dolly-15k", split="train")
     dolly_mapping = {
         'brainstorming': 'planning',
@@ -210,11 +210,11 @@ try:
                 'ambiguity_flag': ambiguity_flag
             })
 except Exception as e:
-    print(f"⚠️ Failed to load Dolly from HF: {e}. Skipping...")
+    print(f"âš ï¸ Failed to load Dolly from HF: {e}. Skipping...")
 
 # 2. Glaive Code Assistant
 try:
-    print("📥 Loading Glaive Code Assistant from Hugging Face...")
+    print("ðŸ“¥ Loading Glaive Code Assistant from Hugging Face...")
     glaive = load_dataset("glaiveai/glaive-code-assistant", split="train")
     for row in glaive:
         prompt = row.get('instruction', '')
@@ -228,11 +228,11 @@ try:
                 'ambiguity_flag': 0
             })
 except Exception as e:
-    print(f"⚠️ Failed to load Glaive from HF: {e}. Skipping...")
+    print(f"âš ï¸ Failed to load Glaive from HF: {e}. Skipping...")
 
 # 3. Alpaca
 try:
-    print("📥 Loading Alpaca from Hugging Face...")
+    print("ðŸ“¥ Loading Alpaca from Hugging Face...")
     alpaca = load_dataset("tatsu-lab/alpaca", split="train")
     for row in alpaca:
         prompt = row.get('instruction', '')
@@ -265,11 +265,11 @@ try:
                 'ambiguity_flag': ambiguity_flag
             })
 except Exception as e:
-    print(f"⚠️ Failed to load Alpaca from HF: {e}. Skipping...")
+    print(f"âš ï¸ Failed to load Alpaca from HF: {e}. Skipping...")
 
 # 4. OpenAssistant
 try:
-    print("📥 Loading OpenAssistant English dataset...")
+    print("ðŸ“¥ Loading OpenAssistant English dataset...")
     oasst = load_dataset("OpenAssistant/oasst1", split="train")
     # Filter to English prompter nodes
     for row in oasst:
@@ -305,11 +305,11 @@ try:
                 'ambiguity_flag': ambiguity_flag
             })
 except Exception as e:
-    print(f"⚠️ Failed to load OpenAssistant from HF: {e}. Skipping...")
+    print(f"âš ï¸ Failed to load OpenAssistant from HF: {e}. Skipping...")
 
 # 5. Awesome ChatGPT Prompts
 try:
-    print("📥 Loading Awesome ChatGPT Prompts...")
+    print("ðŸ“¥ Loading Awesome ChatGPT Prompts...")
     awesome = load_dataset("fka/awesome-chatgpt-prompts", split="train")
     for row in awesome:
         prompt = row.get('prompt', '')
@@ -328,14 +328,14 @@ try:
                 'ambiguity_flag': ambiguity_flag
             })
 except Exception as e:
-    print(f"⚠️ Failed to load Awesome ChatGPT Prompts from HF: {e}. Skipping...")
+    print(f"âš ï¸ Failed to load Awesome ChatGPT Prompts from HF: {e}. Skipping...")
 
 
 # --- B. LOAD LOCAL GENERATED CSV FILE IF PRESENT ---
-local_csv = "promptsmith_dataset.csv"
+local_csv = "PromptRoute_dataset.csv"
 if os.path.exists(local_csv):
     try:
-        print(f"📥 Loading local generated prompts from '{local_csv}' using resilient parser...")
+        print(f"ðŸ“¥ Loading local generated prompts from '{local_csv}' using resilient parser...")
         with open(local_csv, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             header = next(reader, None)  # Skip header
@@ -371,9 +371,9 @@ if os.path.exists(local_csv):
                         'ambiguity_flag': ambiguity_flag
                     })
     except Exception as e:
-        print(f"⚠️ Error reading local CSV: {e}")
+        print(f"âš ï¸ Error reading local CSV: {e}")
 else:
-    print(f"ℹ️ No local generated file '{local_csv}' found to merge.")
+    print(f"â„¹ï¸ No local generated file '{local_csv}' found to merge.")
 
 
 # --- C. MERGE MANUAL AND PROGRAMMATIC SKIPS ---
@@ -386,7 +386,7 @@ for prompt in total_skip_prompts:
         'ambiguity_flag': 0
     })
 
-print(f"🔄 Total parsed raw rows combined: {len(all_rows)}")
+print(f"ðŸ”„ Total parsed raw rows combined: {len(all_rows)}")
 
 
 # --- D. COMPUTATION & METADATA ENRICHMENT ---
@@ -396,7 +396,7 @@ df_final = pd.DataFrame(all_rows)
 df_final = df_final.dropna(subset=['prompt'])
 df_final = df_final[df_final['prompt'].str.strip() != '']
 
-print("📈 Enriching metadata, length buckets, styles, and technique chains...")
+print("ðŸ“ˆ Enriching metadata, length buckets, styles, and technique chains...")
 
 # Compute remaining columns dynamically
 df_final['prompt_length_bucket'] = df_final['prompt'].apply(get_length_bucket)
@@ -413,7 +413,7 @@ df_final['secondary_technique'] = df_final['label'].apply(lambda l: TECHNIQUES.g
 
 
 # --- E. SHUFFLE AND LABEL BALANCING ---
-print("⚖️ Balancing label distributions (Target: 700 per category, Skips kept complete)...")
+print("âš–ï¸ Balancing label distributions (Target: 700 per category, Skips kept complete)...")
 
 balanced_dfs = []
 grouped = df_final.groupby('label')
@@ -429,7 +429,7 @@ for label_name, group in grouped:
         # Balance up to 700 samples
         count = len(shuffled_group)
         if count < 700:
-            print(f"⚠️ Warning: Label '{label_name}' has only {count} rows. Keep all, no downsampling.")
+            print(f"âš ï¸ Warning: Label '{label_name}' has only {count} rows. Keep all, no downsampling.")
             balanced_dfs.append(shuffled_group)
         else:
             balanced_dfs.append(shuffled_group.head(700))
@@ -446,19 +446,20 @@ COLUMNS_ORDER = [
 df_balanced = df_balanced[COLUMNS_ORDER]
 
 # Output file path
-output_path = "promptsmith_dataset_v1.csv"
+output_path = "PromptRoute_dataset_v1.csv"
 df_balanced.to_csv(output_path, index=False, quoting=csv.QUOTE_MINIMAL)
 
 print("\n" + "="*50)
-print(f"🏆 SUCCESS: Balanced dataset saved as '{output_path}'")
-print(f"🏆 Total Final Rows: {df_balanced.shape[0]}")
+print(f"ðŸ† SUCCESS: Balanced dataset saved as '{output_path}'")
+print(f"ðŸ† Total Final Rows: {df_balanced.shape[0]}")
 print("="*50)
 
 # Print Distribution Tables
-print("\n📊 Final Class Distribution:")
+print("\nðŸ“Š Final Class Distribution:")
 print(df_balanced['label'].value_counts())
 
-print("\n📊 Class Distribution by Source:")
+print("\nðŸ“Š Class Distribution by Source:")
 source_dist = df_balanced.groupby(['label', 'source']).size().unstack(fill_value=0)
 print(source_dist)
 print("="*50 + "\n")
+

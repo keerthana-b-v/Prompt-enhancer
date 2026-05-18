@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "default_locale": "en",
-  "name": "PromptSmith",
+  "name": "PromptRoute",
   "version": "1.0.0",
-  "description": "Technique-aware, premium prompt enhancement for ChatGPT, Claude & Gemini",
+  "description": "Automatically routes your prompt to the optimal prompting technique — CoT, ReAct, Least-to-Most, PoT, and 14 more. Works on ChatGPT, Claude, and Gemini.",
   "permissions": [
     "storage",
     "activeTab",

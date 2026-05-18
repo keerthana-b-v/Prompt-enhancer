@@ -1,10 +1,10 @@
 /* extension/content/content.css */
-/* Premium, Glassmorphic, AI-Native styling system for PromptSmith UI */
+/* Premium, Glassmorphic, AI-Native styling system for PromptRoute UI */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 /* --- ✨ Enhance Button --- */
-#promptsmith-btn {
+#promptroute-btn {
   position: absolute;
   right: 12px;
   top: 10px; /* Aligns neatly in the top right */
@@ -33,18 +33,18 @@
   outline: none;
 }
 
-#promptsmith-btn:hover {
+#promptroute-btn:hover {
   transform: translateY(-1px) scale(1.02);
   border-color: rgba(6, 182, 212, 0.7); /* Neon Cyan on hover */
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(6, 182, 212, 0.35) 100%);
   box-shadow: 0 6px 15px rgba(6, 182, 212, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
-#promptsmith-btn:active {
+#promptroute-btn:active {
   transform: translateY(0) scale(0.98);
 }
 
-#promptsmith-btn.loading {
+#promptroute-btn.loading {
   animation: ps-pulse-glow 1.5s infinite ease-in-out;
   cursor: not-allowed;
   opacity: 0.85;

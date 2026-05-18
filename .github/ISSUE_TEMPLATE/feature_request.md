@@ -1,6 +1,6 @@
 ---
 name: 🚀 Feature Request
-about: Propose a new feature or prompting technique for PromptSmith
+about: Propose a new feature or prompting technique for PromptRoute
 title: '[FEAT] '
 labels: enhancement
 assignees: ''

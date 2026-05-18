@@ -26,7 +26,7 @@
         }
       }
     } catch (error) {
-      console.error("[PromptSmith] detectPlatform error:", error);
+      console.error("[PromptRoute] detectPlatform error:", error);
     }
     return "unknown";
   }
@@ -53,7 +53,7 @@
           }
         }
       } catch (e) {
-        console.warn(`[PromptSmith] Error querying selector ${selector}:`, e);
+        console.warn(`[PromptRoute] Error querying selector ${selector}:`, e);
       }
     }
     try {
@@ -651,10 +651,10 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
     }
   }
   function injectEnhanceButton(box) {
-    if (document.getElementById("promptsmith-btn"))
+    if (document.getElementById("promptroute-btn"))
       return;
     enhanceButton = document.createElement("button");
-    enhanceButton.id = "promptsmith-btn";
+    enhanceButton.id = "promptroute-btn";
     const sparkle = document.createElement("span");
     sparkle.className = "ps-btn-sparkle";
     sparkle.textContent = "\u2728";
@@ -663,7 +663,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
     btnText.textContent = "Enhance";
     enhanceButton.appendChild(sparkle);
     enhanceButton.appendChild(btnText);
-    enhanceButton.title = "Enhance with PromptSmith";
+    enhanceButton.title = "Enhance with PromptRoute";
     enhanceButton.addEventListener("click", handleEnhance);
     const parent = box.parentElement;
     if (parent) {
@@ -738,12 +738,12 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
       showToast("This prompt is too short to enhance.");
       return;
     }
-    window.promptSmithOriginal = originalPrompt;
+    window.promptRouteOriginal = originalPrompt;
     enhanceButton.classList.add("loading");
     enhanceButton.disabled = true;
     enhanceButton.querySelector(".ps-btn-text").textContent = "Enhancing...";
     try {
-      console.log("[PromptSmith] Sending classification request...");
+      console.log("[PromptRoute] Sending classification request...");
       const classResponse = await chrome.runtime.sendMessage({
         type: "CLASSIFY_PROMPT",
         text: originalPrompt
@@ -758,7 +758,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
         mode = "light";
       }
       const debugTechnique = routeAndEnhance("", useCase, mode).technique?.name || "Instruction Prompting";
-      console.log(`[PromptSmith] Label: ${useCase} | Confidence: ${confidence.toFixed(2)} | Mode: ${mode} | Technique: ${debugTechnique}`);
+      console.log(`[PromptRoute] Label: ${useCase} | Confidence: ${confidence.toFixed(2)} | Mode: ${mode} | Technique: ${debugTechnique}`);
       if (useCase === "skip") {
         showToast("This prompt does not need enhancement.");
         return;
@@ -792,9 +792,9 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
       showExplanationPanel(result.technique, confidence, mode, originalPrompt, result.enhanced, isTokenEfficient);
       showToast("Prompt enhanced successfully!");
     } catch (err) {
-      console.error("[PromptSmith] Enhancement failed:", err);
+      console.error("[PromptRoute] Enhancement failed:", err);
       if (err.message && err.message.includes("Extension context invalidated")) {
-        showToast("Extension reloaded \u2014 please refresh this page to reconnect PromptSmith.");
+        showToast("Extension reloaded \u2014 please refresh this page to reconnect PromptRoute.");
         return;
       }
       showToast("Enhancement failed. Please try again.");
@@ -807,7 +807,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
   function showExplanationPanel(technique, confidence, mode, originalPrompt, enhancedPrompt, isTokenEfficient) {
     explanationPanel?.remove();
     explanationPanel = document.createElement("div");
-    explanationPanel.id = "promptsmith-panel";
+    explanationPanel.id = "promptroute-panel";
     explanationPanel.className = "ps-panel-fade-in";
     const modeLabel = mode === "light" ? "\u26A1 Light (Reasoning Model detected)" : "\u{1F525} Full";
     const confidencePct = (confidence * 100).toFixed(0);
@@ -1009,7 +1009,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
           showToast(`Applying ${targetTechnique.name}...`);
           btn.style.opacity = "0.5";
           btn.disabled = true;
-          const original = window.promptSmithOriginal || getPromptText();
+          const original = window.promptRouteOriginal || getPromptText();
           const mode2 = getEnhancementMode();
           let enhanced = mode2 === "light" ? targetTechnique.applyLight(original) : targetTechnique.apply(original);
           const storageState = await chrome.storage.sync.get(["tokenEfficientMode"]);
@@ -1024,9 +1024,9 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
     });
   }
   function showToast(msg) {
-    document.getElementById("promptsmith-toast")?.remove();
+    document.getElementById("promptroute-toast")?.remove();
     const toast = document.createElement("div");
-    toast.id = "promptsmith-toast";
+    toast.id = "promptroute-toast";
     toast.className = "ps-toast-fade-in";
     const icon = document.createElement("span");
     icon.className = "ps-toast-icon";
@@ -1061,14 +1061,14 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
         if (box && isEnabled) {
           injectEnhanceButton(box);
         } else {
-          document.getElementById("promptsmith-btn")?.remove();
+          document.getElementById("promptroute-btn")?.remove();
           enhanceButton = null;
         }
       } catch (e) {
         if (e.message && e.message.includes("Extension context invalidated")) {
           clearInterval(intervalId);
         } else {
-          console.warn("[PromptSmith] Scanner bootloop error:", e);
+          console.warn("[PromptRoute] Scanner bootloop error:", e);
         }
       }
     }, 1e3);

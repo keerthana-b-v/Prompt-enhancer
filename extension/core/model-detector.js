@@ -26,7 +26,7 @@ export function detectPlatform() {
       }
     }
   } catch (error) {
-    console.error('[PromptSmith] detectPlatform error:', error);
+    console.error('[PromptRoute] detectPlatform error:', error);
   }
   return 'unknown';
 }
@@ -54,7 +54,7 @@ export function isReasoningModel() {
         }
       }
     } catch (e) {
-      console.warn(`[PromptSmith] Error querying selector ${selector}:`, e);
+      console.warn(`[PromptRoute] Error querying selector ${selector}:`, e);
     }
   }
 

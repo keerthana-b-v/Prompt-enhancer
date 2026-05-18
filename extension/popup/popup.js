@@ -1,4 +1,4 @@
-// PromptSmith Popup UI Settings & Onboarding Engine
+// PromptRoute Popup UI Settings & Onboarding Engine
 // Manages master switches, key entries, and live tab diagnostics
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       triggerStatusDiagnostics();
 
     } catch (e) {
-      console.error('[PromptSmith] Save settings failure:', e);
+      console.error('[PromptRoute] Save settings failure:', e);
       saveStatus.textContent = '✗ Failed to save settings.';
       saveStatus.className = 'ps-status-msg error';
     } finally {
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function triggerStatusDiagnostics() {
     chrome.runtime.sendMessage({ type: 'CHECK_MODEL_STATUS' }, (response) => {
       if (chrome.runtime.lastError) {
-        console.warn('[PromptSmith] Background service worker did not answer check_status.');
+        console.warn('[PromptRoute] Background service worker did not answer check_status.');
         const modelStatusEl = document.getElementById('diag-model-status');
         if (modelStatusEl) {
           modelStatusEl.textContent = '○ Checking...';

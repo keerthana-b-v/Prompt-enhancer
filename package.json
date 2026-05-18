@@ -1,5 +1,5 @@
 {
-  "name": "promptsmith",
+  "name": "promptroute",
   "version": "1.0.0",
   "description": "Technique-aware prompt enhancement for ChatGPT, Claude & Gemini",
   "type": "module",
@@ -24,11 +24,11 @@
     "chain-of-thought",
     "reasoning-models"
   ],
-  "author": "PromptSmith Contributors",
+  "author": "PromptRoute Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/promptsmith/promptsmith.git"
+    "url": "git+https://github.com/YOUR_USERNAME/promptroute.git"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0"

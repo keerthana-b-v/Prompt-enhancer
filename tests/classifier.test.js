@@ -33,38 +33,67 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
         }
       }
     },
-    pipeline: jest.fn().mockImplementation(async (_task, _model, _options) => {
-      return jest.fn().mockImplementation(async (text) => {
-        const textLower = text.toLowerCase();
-        
-        if (textLower.includes('solve') || textLower.includes('equation')) {
-          return [{ label: 'math', score: 0.95 }];
-        }
-        if (textLower.includes('story') || textLower.includes('poem')) {
-          return [{ label: 'creative', score: 0.87 }];
-        }
-        if (textLower.includes('write') || textLower.includes('code')) {
-          return [{ label: 'code', score: 0.88 }];
-        }
-        if (textLower.includes('plan') || textLower.includes('roadmap')) {
-          return [{ label: 'planning', score: 0.86 }];
-        }
-        if (textLower.includes('speed of light') || textLower.includes('what is')) {
-          return [{ label: 'factual', score: 0.82 }];
-        }
-        if (textLower.includes('analyze') || textLower.includes('performance')) {
-          return [{ label: 'analysis', score: 0.83 }];
-        }
-        if (textLower.includes('detailed in-depth') || textLower.includes('comprehensive')) {
-          return [{ label: 'longform', score: 0.81 }];
-        }
-        if (textLower.includes('hi model') || textLower.includes('conversational')) {
-          return [{ label: 'conversational', score: 0.78 }];
-        }
-        
-        return [{ label: 'general', score: 0.50 }];
-      });
-    }),
+    AutoTokenizer: {
+      from_pretrained: jest.fn().mockImplementation(async () => {
+        return jest.fn().mockImplementation(async (text) => {
+          return { text };
+        });
+      })
+    },
+    AutoModelForSequenceClassification: {
+      from_pretrained: jest.fn().mockImplementation(async () => {
+        return jest.fn().mockImplementation(async (inputs) => {
+          const textLower = (inputs.text || '').toLowerCase();
+          
+          let score = 0.5;
+          let targetIndex = 11; // Undefined index in label map -> defaults to 'general'
+
+          if (textLower.includes('solve') || textLower.includes('equation')) {
+            targetIndex = 7; // math
+            score = 0.95;
+          } else if (textLower.includes('story') || textLower.includes('poem')) {
+            targetIndex = 4; // creative
+            score = 0.87;
+          } else if (textLower.includes('write') || textLower.includes('code')) {
+            targetIndex = 2; // code
+            score = 0.88;
+          } else if (textLower.includes('plan') || textLower.includes('roadmap')) {
+            targetIndex = 8; // planning
+            score = 0.86;
+          } else if (textLower.includes('speed of light') || textLower.includes('what is')) {
+            targetIndex = 5; // factual
+            score = 0.82;
+          } else if (textLower.includes('analyze') || textLower.includes('performance')) {
+            targetIndex = 0; // analysis
+            score = 0.83;
+          } else if (textLower.includes('detailed in-depth') || textLower.includes('comprehensive')) {
+            targetIndex = 6; // longform
+            score = 0.81;
+          } else if (textLower.includes('hi model') || textLower.includes('conversational')) {
+            targetIndex = 3; // conversational
+            score = 0.78;
+          } else {
+            // general
+            if (textLower.includes('random')) {
+              score = 0.50;
+            } else {
+              score = 0.55;
+            }
+          }
+
+          let logits = new Array(12).fill(0);
+          // To get exact softmax score S for index T, where all other 11 elements have logit 0:
+          // exp(logits[T]) / (11 + exp(logits[T])) = S  =>  logits[T] = ln(11 * S / (1 - S))
+          logits[targetIndex] = Math.log(11 * score / (1 - score));
+
+          return {
+            logits: {
+              data: new Float32Array(logits)
+            }
+          };
+        });
+      })
+    }
   };
 });
 
@@ -136,7 +165,7 @@ describe('PromptSmith Classifier Engine Tests', () => {
     const result = await classifyPrompt(generalPrompt);
     
     expect(result.label).toBe('general');
-    expect(result.confidence).toBe(0.5);
+    expect(result.confidence).toBeCloseTo(0.5, 5);
     expect(isHighConfidence(result.confidence)).toBe(false);
   });
 

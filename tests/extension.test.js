@@ -21,19 +21,41 @@ jest.unstable_mockModule('@huggingface/transformers', () => {
         }
       }
     },
-    pipeline: jest.fn().mockImplementation(async (_task, _model, _options) => {
-      // Mock classifier pipeline that parses text context
-      return jest.fn().mockImplementation(async (text) => {
-        const textLower = text.toLowerCase();
-        if (textLower.includes('solve') || textLower.includes('math')) {
-          return [{ label: 'math', score: 0.95 }];
-        }
-        if (textLower.includes('write') || textLower.includes('code') || textLower.includes('javascript')) {
-          return [{ label: 'code', score: 0.88 }];
-        }
-        return [{ label: 'general', score: 0.55 }];
-      });
-    }),
+    AutoTokenizer: {
+      from_pretrained: jest.fn().mockImplementation(async () => {
+        return jest.fn().mockImplementation(async (text) => {
+          return { text };
+        });
+      })
+    },
+    AutoModelForSequenceClassification: {
+      from_pretrained: jest.fn().mockImplementation(async () => {
+        return jest.fn().mockImplementation(async (inputs) => {
+          const textLower = (inputs.text || '').toLowerCase();
+          
+          let score = 0.55;
+          let targetIndex = 11; // Undefined index in label map -> defaults to 'general'
+
+          if (textLower.includes('solve') || textLower.includes('math')) {
+            targetIndex = 7; // math
+            score = 0.95;
+          } else if (textLower.includes('write') || textLower.includes('code') || textLower.includes('javascript')) {
+            targetIndex = 2; // code
+            score = 0.88;
+          }
+
+          let logits = new Array(12).fill(0);
+          // logits[T] = ln(11 * S / (1 - S))
+          logits[targetIndex] = Math.log(11 * score / (1 - score));
+
+          return {
+            logits: {
+              data: new Float32Array(logits)
+            }
+          };
+        });
+      })
+    }
   };
 });
 
@@ -65,7 +87,7 @@ describe('PromptSmith Extension Integration Tests', () => {
     const result = await classifyPrompt(prompt);
     
     expect(result.label).toBe('math');
-    expect(result.confidence).toBe(0.95);
+    expect(result.confidence).toBeCloseTo(0.95, 5);
     expect(isHighConfidence(result.confidence)).toBe(true);
   });
 
@@ -75,7 +97,7 @@ describe('PromptSmith Extension Integration Tests', () => {
     const result = await classifyPrompt(prompt);
     
     expect(result.label).toBe('code');
-    expect(result.confidence).toBe(0.88);
+    expect(result.confidence).toBeCloseTo(0.88, 5);
     expect(isHighConfidence(result.confidence)).toBe(true);
   });
 

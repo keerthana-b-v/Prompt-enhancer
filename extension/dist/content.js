@@ -504,7 +504,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
   var TECHNIQUE_MAP = {
     math: { primary: selfConsistency, secondary: cot },
     code: { primary: pot, secondary: react },
-    creative: { primary: rolePrompting, secondary: treeOfThoughts },
+    creative: { primary: structuredRole, secondary: treeOfThoughts },
     factual: { primary: stepBack, secondary: cot },
     planning: { primary: leastToMost, secondary: treeOfThoughts },
     analysis: { primary: selfRefine, secondary: adversarialPrompting },

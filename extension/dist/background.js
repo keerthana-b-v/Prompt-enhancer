@@ -245,7 +245,7 @@ var selfConsistency = {
   paper: "Wang et al. 2022, PaLM GSM8K +17.9% improvement over CoT",
   tokenMultiplier: 3.2,
   apply(prompt) {
-    return `Problem: ${prompt}
+    return `${prompt}
 
 Solve this three separate times using three completely different reasoning approaches. Work each attempt fully and independently before moving to the next.
 
@@ -256,7 +256,9 @@ Attempt 3 \u2014 solve once more using a third method.
 After completing all three, compare the results. If they agree, state the final answer with high confidence. If any disagree, identify the error, explain the correct reasoning, and state the verified final answer clearly.`;
   },
   applyLight(prompt) {
-    return `Solve this twice using different methods and confirm both give the same answer. ${prompt}`;
+    return `${prompt}
+
+Solve this twice using two different methods and confirm both give the same answer.`;
   }
 };
 
@@ -344,14 +346,9 @@ var xmlStructured = {
   paper: "Anthropic 2023 \u2014 Claude Prompt Engineering: Using XML tags to structure prompts and format LLM outputs",
   tokenMultiplier: 1.5,
   apply(prompt) {
-    return `Wrap the task context in XML tags for absolute clarity:
+    return `${prompt}
 
-<task_context>
-  <prompt>${prompt}</prompt>
-  <formatting_instruction>
-    Please organize and partition your response strictly using appropriate, matching XML tags (e.g., <thought_process>, <result>, <metadata>) to separate each logical portion of the output.
-  </formatting_instruction>
-</task_context>`;
+Structure your response using XML tags for maximum clarity. Organize each logical portion of your output using appropriate, matching XML tags \u2014 for example: <thought_process>, <result>, <metadata>, <reasoning>, or <summary> \u2014 to cleanly separate each section of the output.`;
   },
   applyLight(prompt) {
     return `${prompt}
@@ -511,35 +508,41 @@ function routeAndEnhance(prompt, useCase, mode) {
 }
 
 // extension/background/background.js
-var SYSTEM_PROMPT = `You are a world-class prompt enhancement engine with deep expertise in advanced prompting strategies.
+var SYSTEM_PROMPT = `You are an expert prompt engineer. Your job is to rewrite user prompts to get dramatically better responses from AI models.
 
-Your job has two steps:
-1. Classify the user's raw prompt into exactly one category from this list:
-   code, math, creative, planning, factual, analysis, longform, conversational, agentic, structured_output, general
+Given a raw user prompt:
 
-2. Enhance the prompt using the optimal technique for that category:
-   - code \u2192 Program-of-Thought: algorithmic structure, variables, step-by-step logic, clean code patterns
-   - math \u2192 Self-Consistency: solve via multiple independent approaches, verify agreement
-   - creative \u2192 Role Prompting: adopt an expert creative persona with rich stylistic voice
-   - planning \u2192 Least-to-Most: decompose into progressive sub-tasks from foundational to complex
-   - factual \u2192 Step-Back Abstraction: ground in first principles then apply to the specific query
-   - analysis \u2192 Self-Refinement: draft, self-critique for gaps and errors, produce refined output
-   - longform \u2192 Skeleton-of-Thought: outline all sections first, then expand each systematically
-   - conversational \u2192 Instruction Prompting: clear direct instructions with explicit output constraints
-   - agentic \u2192 ReAct: Thought/Action/Observation cycle for multi-step tool use
-   - structured_output \u2192 XML Structure: wrap context in semantic XML tags for precise formatting
-   - general \u2192 Meta-Prompting: identify the optimal expert approach, then execute it
+STEP 1 - Identify:
+- The specific topic and domain (e.g. RAG, Python, fitness, marketing)
+- The user's actual intent (learn, build, analyze, create, plan, debug)
+- The complexity level (beginner, intermediate, expert)
 
-Enhancement rules:
-- NO CORPORATE FILLER: No generic phrases like "By following these guidelines..."
-- TECHNICAL SPECIFICITY: Use concrete stacks, libraries, and precise versions
-- CONFLICT RESOLUTION: Proactively resolve contradictions in the prompt
-- The enhanced_prompt must be complete and immediately usable \u2014 no placeholders
+STEP 2 - Select the best technique:
+- Learning/roadmap intent \u2192 Least-to-Most
+- Reasoning/math/logic \u2192 Chain-of-Thought
+- Code/implementation \u2192 Program-of-Thought
+- Research/search tasks \u2192 ReAct
+- Creative/writing \u2192 Structured Role
+- Analysis/comparison \u2192 Self-Refine
+- Factual explanation \u2192 Step-Back
+- Long guides/reports \u2192 Skeleton-of-Thought
+- Ambiguous/novel \u2192 Meta Prompting
 
-Return ONLY a valid JSON object. No markdown fences, no text outside the JSON:
+STEP 3 - Rewrite the prompt:
+- Keep ALL specific terminology from the original prompt
+- Do NOT replace domain terms with generic placeholders
+- Apply the technique structure around the specific content
+- Make it 3-5x more detailed than the original
+- Sound like an expert in that domain wrote it
+
+CRITICAL: If user says "i want to learn RAG" the enhanced prompt MUST mention RAG specifically throughout. Never write "the domain of this request" \u2014 always name the actual domain.
+
+Return valid JSON only:
 {
-  "label": "<one of the 11 categories above>",
-  "enhanced_prompt": "<the fully enhanced prompt text>"
+  "label": "planning",
+  "technique_name": "Least-to-Most",
+  "enhanced_prompt": "full enhanced prompt here",
+  "reason": "one sentence why this technique"
 }`;
 var creatingOffscreen = null;
 chrome.runtime.onInstalled.addListener(() => {
@@ -879,6 +882,8 @@ var VALID_LABELS = /* @__PURE__ */ new Set([
 function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMultiplier) {
   let label = fallbackUseCase;
   let enhanced = cleanAPIOutput(content);
+  let techniqueOverrideName = null;
+  let techniqueReason = null;
   try {
     const jsonStr = content.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
     const parsed = JSON.parse(jsonStr);
@@ -887,6 +892,12 @@ function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMulti
     }
     if (parsed.enhanced_prompt && typeof parsed.enhanced_prompt === "string") {
       enhanced = parsed.enhanced_prompt.trim();
+    }
+    if (parsed.technique_name && typeof parsed.technique_name === "string") {
+      techniqueOverrideName = parsed.technique_name.trim();
+    }
+    if (parsed.reason && typeof parsed.reason === "string") {
+      techniqueReason = parsed.reason.trim();
     }
   } catch (e) {
   }
@@ -898,6 +909,12 @@ function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMulti
     paper: `LLM-enhanced via ${providerName}`,
     tokenMultiplier
   };
+  if (techniqueOverrideName) {
+    technique.name = techniqueOverrideName;
+  }
+  if (techniqueReason) {
+    technique.reason = techniqueReason;
+  }
   return { enhanced, label, technique };
 }
 function buildEnhancementRequest(prompt, useCase, mode, techniqueName) {

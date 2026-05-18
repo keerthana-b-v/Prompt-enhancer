@@ -9,14 +9,9 @@ export const xmlStructured = {
   tokenMultiplier: 1.5,
 
   apply(prompt) {
-    return `Wrap the task context in XML tags for absolute clarity:
+    return `${prompt}
 
-<task_context>
-  <prompt>${prompt}</prompt>
-  <formatting_instruction>
-    Please organize and partition your response strictly using appropriate, matching XML tags (e.g., <thought_process>, <result>, <metadata>) to separate each logical portion of the output.
-  </formatting_instruction>
-</task_context>`;
+Structure your response using XML tags for maximum clarity. Organize each logical portion of your output using appropriate, matching XML tags — for example: <thought_process>, <result>, <metadata>, <reasoning>, or <summary> — to cleanly separate each section of the output.`;
   },
 
   applyLight(prompt) {

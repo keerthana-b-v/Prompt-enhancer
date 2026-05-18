@@ -339,6 +339,23 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
   modeItem.appendChild(modeVal);
   body.appendChild(modeItem);
 
+  // AI Rationale (Reason)
+  if (technique.reason) {
+    const reasonItem = document.createElement('div');
+    reasonItem.className = 'ps-detail-item';
+    const reasonLabel = document.createElement('span');
+    reasonLabel.className = 'ps-detail-label';
+    reasonLabel.textContent = '💡 AI Rationale: ';
+    const reasonVal = document.createElement('span');
+    reasonVal.className = 'ps-detail-value';
+    reasonVal.style.fontStyle = 'italic';
+    reasonVal.style.color = '#a78bfa';
+    reasonVal.textContent = technique.reason;
+    reasonItem.appendChild(reasonLabel);
+    reasonItem.appendChild(reasonVal);
+    body.appendChild(reasonItem);
+  }
+
   // Token Estimate
   const tokenItem = document.createElement('div');
   tokenItem.className = 'ps-detail-item';

@@ -299,7 +299,7 @@ Provide your response within a highly structured framework. Start with a brief, 
     paper: "Wang et al. 2022, PaLM GSM8K +17.9% improvement over CoT",
     tokenMultiplier: 3.2,
     apply(prompt) {
-      return `Problem: ${prompt}
+      return `${prompt}
 
 Solve this three separate times using three completely different reasoning approaches. Work each attempt fully and independently before moving to the next.
 
@@ -310,7 +310,9 @@ Attempt 3 \u2014 solve once more using a third method.
 After completing all three, compare the results. If they agree, state the final answer with high confidence. If any disagree, identify the error, explain the correct reasoning, and state the verified final answer clearly.`;
     },
     applyLight(prompt) {
-      return `Solve this twice using different methods and confirm both give the same answer. ${prompt}`;
+      return `${prompt}
+
+Solve this twice using two different methods and confirm both give the same answer.`;
     }
   };
 
@@ -398,14 +400,9 @@ First, identify the best way to approach this task (methodology and perspective)
     paper: "Anthropic 2023 \u2014 Claude Prompt Engineering: Using XML tags to structure prompts and format LLM outputs",
     tokenMultiplier: 1.5,
     apply(prompt) {
-      return `Wrap the task context in XML tags for absolute clarity:
+      return `${prompt}
 
-<task_context>
-  <prompt>${prompt}</prompt>
-  <formatting_instruction>
-    Please organize and partition your response strictly using appropriate, matching XML tags (e.g., <thought_process>, <result>, <metadata>) to separate each logical portion of the output.
-  </formatting_instruction>
-</task_context>`;
+Structure your response using XML tags for maximum clarity. Organize each logical portion of your output using appropriate, matching XML tags \u2014 for example: <thought_process>, <result>, <metadata>, <reasoning>, or <summary> \u2014 to cleanly separate each section of the output.`;
     },
     applyLight(prompt) {
       return `${prompt}
@@ -872,6 +869,21 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
     modeItem.appendChild(modeLabelEl);
     modeItem.appendChild(modeVal);
     body.appendChild(modeItem);
+    if (technique.reason) {
+      const reasonItem = document.createElement("div");
+      reasonItem.className = "ps-detail-item";
+      const reasonLabel = document.createElement("span");
+      reasonLabel.className = "ps-detail-label";
+      reasonLabel.textContent = "\u{1F4A1} AI Rationale: ";
+      const reasonVal = document.createElement("span");
+      reasonVal.className = "ps-detail-value";
+      reasonVal.style.fontStyle = "italic";
+      reasonVal.style.color = "#a78bfa";
+      reasonVal.textContent = technique.reason;
+      reasonItem.appendChild(reasonLabel);
+      reasonItem.appendChild(reasonVal);
+      body.appendChild(reasonItem);
+    }
     const tokenItem = document.createElement("div");
     tokenItem.className = "ps-detail-item";
     const tokenLabel = document.createElement("span");

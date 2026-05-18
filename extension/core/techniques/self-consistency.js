@@ -9,7 +9,7 @@ export const selfConsistency = {
   tokenMultiplier: 3.2,
 
   apply(prompt) {
-    return `Problem: ${prompt}
+    return `${prompt}
 
 Solve this three separate times using three completely different reasoning approaches. Work each attempt fully and independently before moving to the next.
 
@@ -21,6 +21,8 @@ After completing all three, compare the results. If they agree, state the final 
   },
 
   applyLight(prompt) {
-    return `Solve this twice using different methods and confirm both give the same answer. ${prompt}`;
+    return `${prompt}
+
+Solve this twice using two different methods and confirm both give the same answer.`;
   }
 };

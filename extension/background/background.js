@@ -5,35 +5,41 @@ import { id2label } from '../core/labels.js';
 import { getEnhancementMode } from '../core/model-detector.js';
 import { routeAndEnhance } from '../core/router.js';
 
-const SYSTEM_PROMPT = `You are a world-class prompt enhancement engine with deep expertise in advanced prompting strategies.
+const SYSTEM_PROMPT = `You are an expert prompt engineer. Your job is to rewrite user prompts to get dramatically better responses from AI models.
 
-Your job has two steps:
-1. Classify the user's raw prompt into exactly one category from this list:
-   code, math, creative, planning, factual, analysis, longform, conversational, agentic, structured_output, general
+Given a raw user prompt:
 
-2. Enhance the prompt using the optimal technique for that category:
-   - code → Program-of-Thought: algorithmic structure, variables, step-by-step logic, clean code patterns
-   - math → Self-Consistency: solve via multiple independent approaches, verify agreement
-   - creative → Role Prompting: adopt an expert creative persona with rich stylistic voice
-   - planning → Least-to-Most: decompose into progressive sub-tasks from foundational to complex
-   - factual → Step-Back Abstraction: ground in first principles then apply to the specific query
-   - analysis → Self-Refinement: draft, self-critique for gaps and errors, produce refined output
-   - longform → Skeleton-of-Thought: outline all sections first, then expand each systematically
-   - conversational → Instruction Prompting: clear direct instructions with explicit output constraints
-   - agentic → ReAct: Thought/Action/Observation cycle for multi-step tool use
-   - structured_output → XML Structure: wrap context in semantic XML tags for precise formatting
-   - general → Meta-Prompting: identify the optimal expert approach, then execute it
+STEP 1 - Identify:
+- The specific topic and domain (e.g. RAG, Python, fitness, marketing)
+- The user's actual intent (learn, build, analyze, create, plan, debug)
+- The complexity level (beginner, intermediate, expert)
 
-Enhancement rules:
-- NO CORPORATE FILLER: No generic phrases like "By following these guidelines..."
-- TECHNICAL SPECIFICITY: Use concrete stacks, libraries, and precise versions
-- CONFLICT RESOLUTION: Proactively resolve contradictions in the prompt
-- The enhanced_prompt must be complete and immediately usable — no placeholders
+STEP 2 - Select the best technique:
+- Learning/roadmap intent → Least-to-Most
+- Reasoning/math/logic → Chain-of-Thought
+- Code/implementation → Program-of-Thought
+- Research/search tasks → ReAct
+- Creative/writing → Structured Role
+- Analysis/comparison → Self-Refine
+- Factual explanation → Step-Back
+- Long guides/reports → Skeleton-of-Thought
+- Ambiguous/novel → Meta Prompting
 
-Return ONLY a valid JSON object. No markdown fences, no text outside the JSON:
+STEP 3 - Rewrite the prompt:
+- Keep ALL specific terminology from the original prompt
+- Do NOT replace domain terms with generic placeholders
+- Apply the technique structure around the specific content
+- Make it 3-5x more detailed than the original
+- Sound like an expert in that domain wrote it
+
+CRITICAL: If user says "i want to learn RAG" the enhanced prompt MUST mention RAG specifically throughout. Never write "the domain of this request" — always name the actual domain.
+
+Return valid JSON only:
 {
-  "label": "<one of the 11 categories above>",
-  "enhanced_prompt": "<the fully enhanced prompt text>"
+  "label": "planning",
+  "technique_name": "Least-to-Most",
+  "enhanced_prompt": "full enhanced prompt here",
+  "reason": "one sentence why this technique"
 }`;
 
 let creatingOffscreen = null;
@@ -410,6 +416,8 @@ const VALID_LABELS = new Set([
 function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMultiplier) {
   let label = fallbackUseCase;
   let enhanced = cleanAPIOutput(content);
+  let techniqueOverrideName = null;
+  let techniqueReason = null;
 
   try {
     const jsonStr = content.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
@@ -419,6 +427,12 @@ function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMulti
     }
     if (parsed.enhanced_prompt && typeof parsed.enhanced_prompt === 'string') {
       enhanced = parsed.enhanced_prompt.trim();
+    }
+    if (parsed.technique_name && typeof parsed.technique_name === 'string') {
+      techniqueOverrideName = parsed.technique_name.trim();
+    }
+    if (parsed.reason && typeof parsed.reason === 'string') {
+      techniqueReason = parsed.reason.trim();
     }
   } catch (e) {
     // Groq returned plain text instead of JSON — use content as-is
@@ -432,6 +446,13 @@ function parseAPIResult(content, fallbackUseCase, mode, providerName, tokenMulti
     paper: `LLM-enhanced via ${providerName}`,
     tokenMultiplier
   };
+
+  if (techniqueOverrideName) {
+    technique.name = techniqueOverrideName;
+  }
+  if (techniqueReason) {
+    technique.reason = techniqueReason;
+  }
 
   return { enhanced, label, technique };
 }

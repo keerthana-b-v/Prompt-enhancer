@@ -738,6 +738,7 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
       showToast("This prompt is too short to enhance.");
       return;
     }
+    window.promptSmithOriginal = originalPrompt;
     enhanceButton.classList.add("loading");
     enhanceButton.disabled = true;
     enhanceButton.querySelector(".ps-btn-text").textContent = "Enhancing...";
@@ -1008,15 +1009,16 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
           showToast(`Applying ${targetTechnique.name}...`);
           btn.style.opacity = "0.5";
           btn.disabled = true;
+          const original = window.promptSmithOriginal || getPromptText();
           const mode2 = getEnhancementMode();
-          let enhanced = mode2 === "light" ? targetTechnique.applyLight(originalPrompt) : targetTechnique.apply(originalPrompt);
+          let enhanced = mode2 === "light" ? targetTechnique.applyLight(original) : targetTechnique.apply(original);
           const storageState = await chrome.storage.sync.get(["tokenEfficientMode"]);
           const isTokenEfficient2 = storageState.tokenEfficientMode === true;
           if (isTokenEfficient2) {
             enhanced = compressPrompt(enhanced);
           }
           setPromptText(enhanced);
-          showExplanationPanel(targetTechnique, 1, mode2, originalPrompt, enhanced, isTokenEfficient2);
+          showExplanationPanel(targetTechnique, 1, mode2, original, enhanced, isTokenEfficient2);
         }
       };
     });

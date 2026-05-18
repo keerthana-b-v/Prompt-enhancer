@@ -166,6 +166,10 @@ async function handleEnhance() {
     return;
   }
 
+  // Persist original prompt globally so override buttons always have access to it,
+  // even after the input box has been replaced with the enhanced version.
+  window.promptSmithOriginal = originalPrompt;
+
   // Update button loading UI
   enhanceButton.classList.add('loading');
   enhanceButton.disabled = true;
@@ -516,10 +520,11 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
         btn.style.opacity = '0.5';
         btn.disabled = true;
 
+        const original = window.promptSmithOriginal || getPromptText();
         const mode = getEnhancementMode();
-        let enhanced = mode === 'light' 
-          ? targetTechnique.applyLight(originalPrompt)
-          : targetTechnique.apply(originalPrompt);
+        let enhanced = mode === 'light'
+          ? targetTechnique.applyLight(original)
+          : targetTechnique.apply(original);
 
         const storageState = await chrome.storage.sync.get(['tokenEfficientMode']);
         const isTokenEfficient = storageState.tokenEfficientMode === true;
@@ -528,7 +533,7 @@ function showExplanationPanel(technique, confidence, mode, originalPrompt, enhan
         }
 
         setPromptText(enhanced);
-        showExplanationPanel(targetTechnique, 1.0, mode, originalPrompt, enhanced, isTokenEfficient);
+        showExplanationPanel(targetTechnique, 1.0, mode, original, enhanced, isTokenEfficient);
       }
     };
   });

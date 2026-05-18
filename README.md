@@ -1,17 +1,17 @@
-# PromptSmith ⚡
+# PromptRoute ⚡
 > The only prompt enhancer that applies the RIGHT prompting technique — not just a generic template.
 
 <!-- Add demo.gif here -->
 
 ---
 
-## Why PromptSmith
+## Why PromptRoute
 
 Every other prompt enhancer does this:
 
 > Role + Task + Constraints + Output Format
 
-PromptSmith does this:
+PromptRoute does this:
 
 - Detects your use case (code, planning, analysis, math, creative, factual, agentic, longform...)
 - Routes to the correct technique (CoT, ReAct, Least-to-Most, Step-Back, PoT, ToT, SC...)
@@ -57,7 +57,7 @@ PromptSmith does this:
 
 ### Step 1 — Clone the repo
 ```bash
-git clone https://github.com/YOUR_USERNAME/promptsmith
+git clone https://github.com/YOUR_USERNAME/promptroute
 cd promptsmith
 ```
 
@@ -68,7 +68,7 @@ node build.js
 ```
 
 ### Step 3 — Download the model
-Download `promptsmith-model-v1.zip` from [Releases](../../releases)  
+Download `promptroute-model-v1.zip` from [Releases](../../releases)  
 Unzip and copy all files into:
 ```
 extension/models/promptsmith-classifier/
@@ -81,7 +81,7 @@ extension/models/promptsmith-classifier/
 4. Select the `extension/` folder
 
 ### Step 5 — Add free API keys (optional)
-Click the PromptSmith icon → Settings  
+Click the PromptRoute icon → Settings  
 Add Groq API key (free at console.groq.com)  
 Used only when local classifier confidence is low
 
@@ -97,6 +97,10 @@ Used only when local classifier confidence is low
 6. Enhanced prompt replaces your original
 7. Panel shows technique, confidence, token estimate, research citation
 8. Override to any of 17 techniques with one click
+
+<p align="center">
+  <img src="promptsmith_architecture_diagram.svg" alt="PromptRoute Architecture Diagram" width="800">
+</p>
 
 ---
 
@@ -132,7 +136,7 @@ To retrain with new data:
 python prepare_dataset.py
 # Upload promptsmith_dataset_v1.csv to Colab
 # Run train_classifier.ipynb
-# Download promptsmith-model-v1.zip
+# Download promptroute-model-v1.zip
 # Replace files in models/promptsmith-classifier/
 ```
 

@@ -727,16 +727,16 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
     return collapsedLines.join("\n").trim();
   }
   async function handleEnhance() {
-    const rawPrompt = getPromptText();
-    if (!rawPrompt.trim()) {
+    const originalPrompt = getPromptText();
+    if (!originalPrompt.trim()) {
       showToast("Please type a prompt first!");
       return;
     }
     const SKIP_PATTERNS = [
       /^(hi|hello|hey|thanks|thank you|ok|okay|yes|no|lol|haha|sure|great|cool|bye|goodbye|sup|yo|hmm|nvm|nevermind|continue|more|next|stop|wait|test|testing)$/i
     ];
-    const wordCount = rawPrompt.trim().split(/\s+/).length;
-    const isSkip = wordCount <= 3 && SKIP_PATTERNS.some((p) => p.test(rawPrompt.trim()));
+    const wordCount = originalPrompt.trim().split(/\s+/).length;
+    const isSkip = wordCount <= 3 && SKIP_PATTERNS.some((p) => p.test(originalPrompt.trim()));
     if (isSkip) {
       showToast("This prompt is too short to enhance.");
       return;
@@ -748,13 +748,13 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
       console.log("[PromptSmith] Sending classification request...");
       const classResponse = await chrome.runtime.sendMessage({
         type: "CLASSIFY_PROMPT",
-        text: rawPrompt
+        text: originalPrompt
       });
       let useCase = classResponse.label || "general";
       const confidence = classResponse.confidence || 0;
       let mode = getEnhancementMode();
       if (confidence === 0) {
-        useCase = classifyLocally(rawPrompt);
+        useCase = classifyLocally(originalPrompt);
       }
       if (confidence < 0.55 && mode === "full") {
         mode = "light";
@@ -779,19 +779,19 @@ Please challenge this idea critically and identify potential weaknesses, pitfall
         const targetTechniqueName = dummyResult.technique?.name || "Instruction Prompting";
         result = await chrome.runtime.sendMessage({
           type: "ENHANCE_WITH_API",
-          prompt: rawPrompt,
+          prompt: originalPrompt,
           useCase,
           mode,
           techniqueName: targetTechniqueName
         });
       } else {
-        result = routeAndEnhance(rawPrompt, useCase, mode);
+        result = routeAndEnhance(originalPrompt, useCase, mode);
         if (isTokenEfficient) {
           result.enhanced = compressPrompt(result.enhanced);
         }
       }
       setPromptText(result.enhanced);
-      showExplanationPanel(result.technique, confidence, mode, rawPrompt, result.enhanced, isTokenEfficient);
+      showExplanationPanel(result.technique, confidence, mode, originalPrompt, result.enhanced, isTokenEfficient);
       showToast("Prompt enhanced successfully!");
     } catch (err) {
       console.error("[PromptSmith] Enhancement failed:", err);

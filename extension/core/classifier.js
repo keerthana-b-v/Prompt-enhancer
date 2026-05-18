@@ -8,6 +8,7 @@ env.useBrowserCache = false;
 
 // Point ONNX Runtime to locally bundled WASM assets
 env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('dist/');
+env.backends.onnx.wasm.numThreads = 1;
 
 // Global handshake flags and maps
 export let MODEL_LOADED = false;
@@ -58,29 +59,18 @@ class ClassifierSingleton {
   static async getInstance() {
     if (this.instance === null) {
       try {
-        console.log('[PromptSmith] Initializing local ONNX classifier with WebGPU...');
+        console.log('[PromptSmith] Initializing local ONNX classifier via WASM...');
         this.instance = await pipeline(this.task, this.model, {
           dtype: 'q8',
-          device: 'webgpu'
+          device: 'wasm'
         });
         MODEL_LOADED = true;
-        console.log('[PromptSmith] ONNX model successfully loaded via WebGPU.');
+        console.log('[PromptSmith] ONNX model successfully loaded via WASM.');
         await loadLabelMap();
-      } catch (gpuError) {
-        console.warn('[PromptSmith] WebGPU acceleration unavailable. Falling back to WASM...', gpuError);
-        try {
-          this.instance = await pipeline(this.task, this.model, {
-            dtype: 'q8',
-            device: 'wasm'
-          });
-          MODEL_LOADED = true;
-          console.log('[PromptSmith] ONNX model successfully loaded via WASM.');
-          await loadLabelMap();
-        } catch (wasmError) {
-          console.error('[PromptSmith] ONNX model loading failed completely:', wasmError);
-          MODEL_LOADED = false;
-          this.instance = null;
-        }
+      } catch (wasmError) {
+        console.error('[PromptSmith] ONNX model loading failed:', wasmError);
+        MODEL_LOADED = false;
+        this.instance = null;
       }
     }
     return this.instance;
@@ -116,7 +106,11 @@ export async function classifyPrompt(text) {
       console.warn('[PromptSmith] Classifier is offline. Bypassing and returning general label.');
       return { label: 'general', confidence: 0 };
     }
-    const result = await classifier(text);
+    const result = await classifier(text, {
+      truncation: true,
+      padding: 'max_length',
+      max_length: 128
+    });
     
     if (result && result.length > 0) {
       return {

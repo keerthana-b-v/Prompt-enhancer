@@ -9,7 +9,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const promptText = message.text || '';
     classifyPrompt(promptText)
       .then((result) => {
-        sendResponse(result);
+        console.log('[PromptSmith] Classification:', result);
+        sendResponse({ label: result.label, confidence: result.confidence });
       })
       .catch((err) => {
         console.error('[PromptSmith Offscreen] ONNX classifier error:', err);

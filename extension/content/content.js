@@ -150,8 +150,8 @@ function compressPrompt(text) {
 }
 
 async function handleEnhance() {
-  const rawPrompt = getPromptText();
-  if (!rawPrompt.trim()) {
+  const originalPrompt = getPromptText();
+  if (!originalPrompt.trim()) {
     showToast('Please type a prompt first!');
     return;
   }
@@ -159,8 +159,8 @@ async function handleEnhance() {
   const SKIP_PATTERNS = [
     /^(hi|hello|hey|thanks|thank you|ok|okay|yes|no|lol|haha|sure|great|cool|bye|goodbye|sup|yo|hmm|nvm|nevermind|continue|more|next|stop|wait|test|testing)$/i
   ];
-  const wordCount = rawPrompt.trim().split(/\s+/).length;
-  const isSkip = wordCount <= 3 && SKIP_PATTERNS.some(p => p.test(rawPrompt.trim()));
+  const wordCount = originalPrompt.trim().split(/\s+/).length;
+  const isSkip = wordCount <= 3 && SKIP_PATTERNS.some(p => p.test(originalPrompt.trim()));
   if (isSkip) {
     showToast('This prompt is too short to enhance.');
     return;
@@ -176,7 +176,7 @@ async function handleEnhance() {
     console.log('[PromptSmith] Sending classification request...');
     const classResponse = await chrome.runtime.sendMessage({
       type: 'CLASSIFY_PROMPT',
-      text: rawPrompt
+      text: originalPrompt
     });
 
     let useCase = classResponse.label || 'general';
@@ -186,7 +186,7 @@ async function handleEnhance() {
     // When ONNX classifier is not loaded (confidence=0), fall back to keyword classification
     // so routing produces the correct technique instead of always defaulting to general
     if (confidence === 0) {
-      useCase = classifyLocally(rawPrompt);
+      useCase = classifyLocally(originalPrompt);
     }
 
     // Low confidence: downgrade to light mode to avoid complex scaffolding on uncertain prompts
@@ -223,21 +223,21 @@ async function handleEnhance() {
       // Call API enhancement cascade in background worker
       result = await chrome.runtime.sendMessage({
         type: 'ENHANCE_WITH_API',
-        prompt: rawPrompt,
+        prompt: originalPrompt,
         useCase,
         mode,
         techniqueName: targetTechniqueName
       });
     } else {
       // Fallback to offline-first local technique mapping
-      result = routeAndEnhance(rawPrompt, useCase, mode);
+      result = routeAndEnhance(originalPrompt, useCase, mode);
       if (isTokenEfficient) {
         result.enhanced = compressPrompt(result.enhanced);
       }
     }
 
     setPromptText(result.enhanced);
-    showExplanationPanel(result.technique, confidence, mode, rawPrompt, result.enhanced, isTokenEfficient);
+    showExplanationPanel(result.technique, confidence, mode, originalPrompt, result.enhanced, isTokenEfficient);
     showToast('Prompt enhanced successfully!');
 
   } catch (err) {

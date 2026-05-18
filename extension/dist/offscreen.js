@@ -22640,46 +22640,6 @@ var WhisperProcessor = class extends Processor {
     return await this.feature_extractor(audio);
   }
 };
-var AutoProcessor = class {
-  /** @type {typeof Processor.from_pretrained} */
-  static async from_pretrained(pretrained_model_name_or_path, options = {}) {
-    const preprocessorConfig = await getModelJSON(
-      pretrained_model_name_or_path,
-      IMAGE_PROCESSOR_NAME,
-      true,
-      options
-    );
-    const { image_processor_type, feature_extractor_type, processor_class } = preprocessorConfig;
-    if (processor_class && processors_exports[processor_class]) {
-      return processors_exports[processor_class].from_pretrained(pretrained_model_name_or_path, options);
-    }
-    if (!image_processor_type && !feature_extractor_type) {
-      throw new Error("No `image_processor_type` or `feature_extractor_type` found in the config.");
-    }
-    const components = {};
-    if (image_processor_type) {
-      const image_processor_class = image_processors_exports[image_processor_type.replace(/Fast$/, "")];
-      if (!image_processor_class) {
-        throw new Error(`Unknown image_processor_type: '${image_processor_type}'.`);
-      }
-      components.image_processor = new image_processor_class(preprocessorConfig);
-    }
-    if (feature_extractor_type) {
-      const image_processor_class = image_processors_exports[feature_extractor_type];
-      if (image_processor_class) {
-        components.image_processor = new image_processor_class(preprocessorConfig);
-      } else {
-        const feature_extractor_class = feature_extractors_exports[feature_extractor_type];
-        if (!feature_extractor_class) {
-          throw new Error(`Unknown feature_extractor_type: '${feature_extractor_type}'.`);
-        }
-        components.feature_extractor = new feature_extractor_class(preprocessorConfig);
-      }
-    }
-    const config = {};
-    return new Processor(config, components, null);
-  }
-};
 async function loadConfig(pretrained_model_name_or_path, options) {
   return await getModelJSON(pretrained_model_name_or_path, "config.json", true, options);
 }
@@ -24725,10 +24685,6 @@ var MODEL_SESSION_CONFIG = {
     sessions: (config, options) => ({ model: options.model_file_name ?? "model" })
   }
 };
-function getTextOnlySessions(modelType) {
-  const typeConfig = MODEL_SESSION_CONFIG[modelType];
-  return typeConfig?.text_only_sessions ?? null;
-}
 function getSessionsConfig(modelType, config, options = {}) {
   const typeConfig = MODEL_SESSION_CONFIG[modelType] ?? MODEL_SESSION_CONFIG.default;
   return {
@@ -33325,148 +33281,6 @@ var TASK_ALIASES = Object.freeze({
   // Add for backwards compatibility
   embeddings: "feature-extraction"
 });
-async function get_processor_files(modelId) {
-  if (!modelId) {
-    throw new Error("modelId is required");
-  }
-  const metadata = await get_file_metadata(modelId, IMAGE_PROCESSOR_NAME, {});
-  return metadata.exists ? [IMAGE_PROCESSOR_NAME] : [];
-}
-async function get_files(modelId, {
-  config = null,
-  dtype = null,
-  device = null,
-  model_file_name = null,
-  include_tokenizer = true,
-  include_processor = true
-} = {}) {
-  const files = await get_model_files(modelId, { config, dtype, device, model_file_name });
-  if (include_tokenizer) {
-    const tokenizerFiles = await get_tokenizer_files(modelId);
-    files.push(...tokenizerFiles);
-  }
-  if (include_processor) {
-    const processorFiles = await get_processor_files(modelId);
-    files.push(...processorFiles);
-  }
-  return files;
-}
-async function get_pipeline_files(task, modelId, options = {}) {
-  task = TASK_ALIASES[task] ?? task;
-  const taskConfig = SUPPORTED_TASKS[task];
-  if (!taskConfig) {
-    throw new Error(
-      `Unsupported pipeline task: ${task}. Must be one of [${Object.keys(SUPPORTED_TASKS).join(", ")}]`
-    );
-  }
-  const { type } = taskConfig;
-  const include_tokenizer = type !== "audio" && type !== "image";
-  const include_processor = type !== "text";
-  const files = await get_files(modelId, {
-    ...options,
-    include_tokenizer,
-    include_processor
-  });
-  if (task === "text-generation") {
-    const config = await get_config(modelId, options);
-    const modelType = resolve_model_type(config);
-    const textOnlySessions = getTextOnlySessions(modelType);
-    if (textOnlySessions) {
-      const allowedPrefixes = Object.values(textOnlySessions).map((s) => `onnx/${s}`);
-      return files.filter((f) => !f.startsWith("onnx/") || allowedPrefixes.some((p) => f.startsWith(p)));
-    }
-  }
-  return files;
-}
-async function pipeline2(task, model = null, {
-  progress_callback = null,
-  config = null,
-  cache_dir = null,
-  local_files_only = false,
-  revision = "main",
-  device = null,
-  dtype = null,
-  subfolder = "onnx",
-  use_external_data_format = null,
-  model_file_name = null,
-  session_options = {}
-} = {}) {
-  task = TASK_ALIASES[task] ?? task;
-  const pipelineInfo = SUPPORTED_TASKS[task.split("_", 1)[0]];
-  if (!pipelineInfo) {
-    throw Error(`Unsupported pipeline: ${task}. Must be one of [${Object.keys(SUPPORTED_TASKS)}]`);
-  }
-  if (!model) {
-    model = pipelineInfo.default.model;
-    logger.info(`No model specified. Using default model: "${model}".`);
-    if (!dtype && pipelineInfo.default.dtype) {
-      dtype = pipelineInfo.default.dtype;
-    }
-  }
-  const expected_files = await get_pipeline_files(task, model, {
-    device,
-    dtype
-  });
-  let files_loading = {};
-  if (progress_callback) {
-    const metadata = await Promise.all(expected_files.map(async (file) => get_file_metadata(model, file)));
-    metadata.forEach((m, i) => {
-      if (m.exists) {
-        files_loading[expected_files[i]] = {
-          loaded: 0,
-          total: m.size ?? 0
-        };
-      }
-    });
-  }
-  const pretrainedOptions = {
-    progress_callback: progress_callback ? new DefaultProgressCallback(progress_callback, files_loading) : void 0,
-    config,
-    cache_dir,
-    local_files_only,
-    revision,
-    device,
-    dtype,
-    subfolder,
-    use_external_data_format,
-    model_file_name,
-    session_options
-  };
-  const hasTokenizer = expected_files.includes("tokenizer.json");
-  const hasProcessor = expected_files.includes("preprocessor_config.json");
-  const modelClasses = pipelineInfo.model;
-  let modelPromise;
-  if (Array.isArray(modelClasses)) {
-    const resolvedConfig = config ?? await AutoConfig.from_pretrained(model, pretrainedOptions);
-    const { model_type } = resolvedConfig;
-    const matchedClass = modelClasses.find((cls) => cls.supports(model_type));
-    if (!matchedClass) {
-      throw Error(
-        `Unsupported model type "${model_type}" for task "${task}". None of the candidate model classes support this type.`
-      );
-    }
-    modelPromise = matchedClass.from_pretrained(model, { ...pretrainedOptions, config: resolvedConfig });
-  } else {
-    modelPromise = modelClasses.from_pretrained(model, pretrainedOptions);
-  }
-  const [tokenizer, processor, model_loaded] = await Promise.all([
-    hasTokenizer ? AutoTokenizer.from_pretrained(model, pretrainedOptions) : null,
-    hasProcessor ? AutoProcessor.from_pretrained(model, pretrainedOptions) : null,
-    modelPromise
-  ]);
-  const results = { task, model: model_loaded };
-  if (tokenizer)
-    results.tokenizer = tokenizer;
-  if (processor)
-    results.processor = processor;
-  dispatchCallback(progress_callback, {
-    status: "ready",
-    task,
-    model
-  });
-  const pipelineClass = pipelineInfo.pipeline;
-  return new pipelineClass(results);
-}
 var stdout_write = apis.IS_PROCESS_AVAILABLE ? (x) => process.stdout.write(x) : (x) => console.log(x);
 var CONCRETE_DTYPES = Object.keys(DEFAULT_DTYPE_SUFFIX_MAPPING);
 
@@ -33518,27 +33332,29 @@ async function loadLabelMap() {
   }
 }
 var ClassifierSingleton = class {
-  static task = "text-classification";
-  static model = "promptsmith-classifier";
-  static instance = null;
+  static modelPath = "promptsmith-classifier";
+  static tokenizer = null;
+  static model = null;
+  static loaded = false;
   static async getInstance() {
-    if (this.instance === null) {
+    if (!this.loaded) {
       try {
         console.log("[PromptSmith] Initializing local ONNX classifier via WASM...");
-        this.instance = await pipeline2(this.task, this.model, {
+        this.tokenizer = await AutoTokenizer.from_pretrained(this.modelPath);
+        this.model = await AutoModelForSequenceClassification.from_pretrained(this.modelPath, {
           dtype: "q8",
           device: "wasm"
         });
+        this.loaded = true;
         MODEL_LOADED = true;
         console.log("[PromptSmith] ONNX model successfully loaded via WASM.");
         await loadLabelMap();
-      } catch (wasmError) {
-        console.error("[PromptSmith] ONNX model loading failed:", wasmError);
+      } catch (err) {
+        console.error("[PromptSmith] ONNX model loading failed:", err);
         MODEL_LOADED = false;
-        this.instance = null;
       }
     }
-    return this.instance;
+    return this.loaded ? { tokenizer: this.tokenizer, model: this.model } : null;
   }
 };
 (async () => {
@@ -33559,22 +33375,31 @@ var ClassifierSingleton = class {
 })();
 async function classifyPrompt(text) {
   try {
-    const classifier = await ClassifierSingleton.getInstance();
-    if (!classifier) {
+    const components = await ClassifierSingleton.getInstance();
+    if (!components) {
       console.warn("[PromptSmith] Classifier is offline. Bypassing and returning general label.");
       return { label: "general", confidence: 0 };
     }
-    const result = await classifier(text, {
-      truncation: true,
+    const { tokenizer, model } = components;
+    const inputs = await tokenizer(text, {
       padding: "max_length",
-      max_length: 128
+      max_length: 128,
+      truncation: true,
+      return_tensors: "pt"
     });
-    if (result && result.length > 0) {
-      return {
-        label: result[0].label.toLowerCase().trim(),
-        confidence: result[0].score
-      };
-    }
+    const outputs = await model(inputs);
+    const logitsData = Array.from(outputs.logits.data);
+    const maxLogit = Math.max(...logitsData);
+    const expScores = logitsData.map((x) => Math.exp(x - maxLogit));
+    const sumExp = expScores.reduce((a, b) => a + b, 0);
+    const scores = expScores.map((x) => x / sumExp);
+    const maxScore = Math.max(...scores);
+    const maxIndex = scores.indexOf(maxScore);
+    const label = id2label[maxIndex];
+    return {
+      label: label?.toLowerCase().trim() || "general",
+      confidence: maxScore
+    };
   } catch (error) {
     console.error("[PromptSmith] Error during prompt classification:", error);
   }

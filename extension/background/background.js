@@ -25,6 +25,8 @@ STEP 2 - Select the best technique:
 - Long guides/reports → Skeleton-of-Thought
 - Ambiguous/novel → Meta Prompting
 
+OVERRIDE RULE: ANY prompt containing "i want to learn", "how do i learn", "teach me", "i want to understand", "how to get started with", or "i want to get into" → ALWAYS use Least-to-Most regardless of other signals. Set label to "planning".
+
 STEP 3 - Rewrite the prompt:
 - Keep ALL specific terminology from the original prompt
 - Do NOT replace domain terms with generic placeholders

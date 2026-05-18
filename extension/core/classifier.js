@@ -1,4 +1,4 @@
-import { pipeline, env } from '@huggingface/transformers';
+import { AutoTokenizer, AutoModelForSequenceClassification, env } from '@huggingface/transformers';
 
 // Set up Transformers.js environment constraints
 env.allowLocalModels = true;
@@ -52,28 +52,30 @@ export async function loadLabelMap() {
 }
 
 class ClassifierSingleton {
-  static task = 'text-classification';
-  static model = 'promptsmith-classifier';
-  static instance = null;
+  static modelPath = 'promptsmith-classifier';
+  static tokenizer = null;
+  static model = null;
+  static loaded = false;
 
   static async getInstance() {
-    if (this.instance === null) {
+    if (!this.loaded) {
       try {
         console.log('[PromptSmith] Initializing local ONNX classifier via WASM...');
-        this.instance = await pipeline(this.task, this.model, {
+        this.tokenizer = await AutoTokenizer.from_pretrained(this.modelPath);
+        this.model = await AutoModelForSequenceClassification.from_pretrained(this.modelPath, {
           dtype: 'q8',
           device: 'wasm'
         });
+        this.loaded = true;
         MODEL_LOADED = true;
         console.log('[PromptSmith] ONNX model successfully loaded via WASM.');
         await loadLabelMap();
-      } catch (wasmError) {
-        console.error('[PromptSmith] ONNX model loading failed:', wasmError);
+      } catch (err) {
+        console.error('[PromptSmith] ONNX model loading failed:', err);
         MODEL_LOADED = false;
-        this.instance = null;
       }
     }
-    return this.instance;
+    return this.loaded ? { tokenizer: this.tokenizer, model: this.model } : null;
   }
 }
 
@@ -101,28 +103,43 @@ class ClassifierSingleton {
  */
 export async function classifyPrompt(text) {
   try {
-    const classifier = await ClassifierSingleton.getInstance();
-    if (!classifier) {
+    const components = await ClassifierSingleton.getInstance();
+    if (!components) {
       console.warn('[PromptSmith] Classifier is offline. Bypassing and returning general label.');
       return { label: 'general', confidence: 0 };
     }
-    const result = await classifier(text, {
-      truncation: true,
+
+    const { tokenizer, model } = components;
+
+    // Tokenize with explicit padding so input_ids are always [1, 128]
+    const inputs = await tokenizer(text, {
       padding: 'max_length',
-      max_length: 128
+      max_length: 128,
+      truncation: true,
+      return_tensors: 'pt'
     });
-    
-    if (result && result.length > 0) {
-      return {
-        label: result[0].label.toLowerCase().trim(),
-        confidence: result[0].score
-      };
-    }
+
+    const outputs = await model(inputs);
+
+    // Softmax over raw logits — outputs.logits.data is a flat Float32Array [num_labels]
+    const logitsData = Array.from(outputs.logits.data);
+    const maxLogit = Math.max(...logitsData);
+    const expScores = logitsData.map(x => Math.exp(x - maxLogit));
+    const sumExp = expScores.reduce((a, b) => a + b, 0);
+    const scores = expScores.map(x => x / sumExp);
+
+    const maxScore = Math.max(...scores);
+    const maxIndex = scores.indexOf(maxScore);
+    const label = id2label[maxIndex];
+
+    return {
+      label: label?.toLowerCase().trim() || 'general',
+      confidence: maxScore
+    };
   } catch (error) {
     console.error('[PromptSmith] Error during prompt classification:', error);
   }
-  
-  // Return safe default fallback
+
   return { label: 'general', confidence: 0 };
 }
 
